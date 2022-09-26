@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -45,14 +45,14 @@ namespace ota.ndi
                 _decoderOutput.Create();
             }
             
-            // ˆê“xˆÄƒ}[ƒVƒƒƒŠƒ“ƒO‚µ‚Ä‚©‚ç‚¶‚á‚È‚¢‚ÆShader‚É“n‚¹‚È‚¢‚ñ‚¶‚á‚È‚¢HH
-            // Œã‚Å‚à‚¤ˆê“xƒ`ƒFƒbƒN 
+            // ä¸€åº¦æ¡ˆãƒãƒ¼ã‚·ãƒ£ãƒªãƒ³ã‚°ã—ã¦ã‹ã‚‰ã˜ã‚ƒãªã„ã¨Shaderã«æ¸¡ã›ãªã„ã‚“ã˜ã‚ƒãªã„ï¼Ÿï¼Ÿ
+            // å¾Œã§ã‚‚ã†ä¸€åº¦ãƒã‚§ãƒƒã‚¯ 
             var bytes = new byte[dataCount * 4];
             Marshal.Copy(data, bytes, 0, bytes.Length);
             // Input buffer update
             _decoderInput.SetData(bytes);
 
-            // ”O‚Ì‚½‚ß•Ï”
+            // å¿µã®ãŸã‚å¤‰æ•°
             int pass = 0;
 
             // Compute thread dispatching
@@ -67,21 +67,21 @@ namespace ota.ndi
 
         private Color[] GetPixels()
         {
-            // ƒAƒNƒeƒBƒu‚ÈƒŒƒ“ƒ_[ƒeƒNƒXƒ`ƒƒ‚ğƒLƒƒƒbƒVƒ…‚µ‚Ä‚¨‚­
+            // ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãªãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã—ã¦ãŠã
             var currentRT = RenderTexture.active;
 
-            // ƒAƒNƒeƒBƒu‚ÈƒŒƒ“ƒ_[ƒeƒNƒXƒ`ƒƒ‚ğˆê“I‚ÉTarget‚É•ÏX‚·‚é
+            // ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãªãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ä¸€æ™‚çš„ã«Targetã«å¤‰æ›´ã™ã‚‹
             RenderTexture.active = _decoderOutput;
 
-            // Texture2D.ReadPixels()‚É‚æ‚èƒAƒNƒeƒBƒu‚ÈƒŒƒ“ƒ_[ƒeƒNƒXƒ`ƒƒ‚ÌƒsƒNƒZƒ‹î•ñ‚ğƒeƒNƒXƒ`ƒƒ‚ÉŠi”[‚·‚é
+            // Texture2D.ReadPixels()ã«ã‚ˆã‚Šã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãªãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ”ã‚¯ã‚»ãƒ«æƒ…å ±ã‚’ãƒ†ã‚¯ã‚¹ãƒãƒ£ã«æ ¼ç´ã™ã‚‹
             var texture = new Texture2D(_decoderOutput.width, _decoderOutput.height, TextureFormat.RGBA32, false);
             texture.ReadPixels(new Rect(0, 0, _decoderOutput.width, _decoderOutput.height), 0, 0);
             texture.Apply();
 
-            // ƒsƒNƒZƒ‹î•ñ‚ğæ“¾‚·‚é
+            // ãƒ”ã‚¯ã‚»ãƒ«æƒ…å ±ã‚’å–å¾—ã™ã‚‹
             var colors = texture.GetPixels();
 
-            // ƒAƒNƒeƒBƒu‚ÈƒŒƒ“ƒ_[ƒeƒNƒXƒ`ƒƒ‚ğŒ³‚É–ß‚·
+            // ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãªãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’å…ƒã«æˆ»ã™
             RenderTexture.active = currentRT;
             printColorsInfo(colors);
             return colors;

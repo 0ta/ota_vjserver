@@ -1,4 +1,4 @@
-// Each #kernel tells which function to compile; you can have many kernels
+﻿// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel DecodeUYVA_sRGB
 
 StructuredBuffer<uint> Source;
