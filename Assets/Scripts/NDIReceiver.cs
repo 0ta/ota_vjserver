@@ -18,6 +18,8 @@ namespace ota.ndi
         [SerializeField] private ComputeShader _decodeCompute;
         [SerializeField] private RawImage _image = null;
 
+        [HideInInspector] public RenderTexture texture = null;
+
         [Description("Does the current source support PTZ functionality?")]
         public bool IsPtz
         {
@@ -30,6 +32,7 @@ namespace ota.ndi
             get => _canRecord;
             set => _canRecord = value;
         }
+
 
         private String _receiveName = "";
         private IntPtr _recvInstancePtr = IntPtr.Zero;
@@ -233,7 +236,9 @@ namespace ota.ndi
                             //Debug.Log("Finish!!!!!");
 
                             //Destroy(_image.texture);
-                            _image.texture = _formatConverter.Decode(xres, yres, videoFrame.p_data);
+                            if (texture == null) texture = new RenderTexture(xres, yres, 0);
+                            texture = _formatConverter.Decode(xres, yres, videoFrame.p_data);
+                            _image.texture = texture;
 
                             //_texture.LoadRawTextureData(videoFrame.p_data, bufferSize);
                             //_texture.Apply();
@@ -244,7 +249,7 @@ namespace ota.ndi
                                 metadata = Marshal.PtrToStringAnsi(videoFrame.p_metadata);
                             else
                                 metadata = "metadata is null";
-                            Debug.Log(metadata);
+                            //Debug.Log(metadata);
                             NDIlib.recv_free_video_v2(_recvInstancePtr, ref videoFrame);
                         }, null);
 

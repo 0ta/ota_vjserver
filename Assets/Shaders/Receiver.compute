@@ -22,7 +22,7 @@ float3 YUV2RGB(float3 yuv)
     float r = y + v * (1 - K_R);
     float b = y + u * (1 - K_B);
     float g = (y - K_R * r - K_B * b) / K_G;
-
+    
     return float3(r, g, b);
 }
 
