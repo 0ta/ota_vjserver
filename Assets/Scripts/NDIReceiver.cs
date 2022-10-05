@@ -46,7 +46,6 @@ namespace ota.ndi
         private SynchronizationContext _mainThreadContext = null;
 
         private FormatConverter _formatConverter;
-        private Texture2D _texture = null;
 
         private void Awake()
         {
@@ -67,6 +66,7 @@ namespace ota.ndi
         private void OnDestroy()
         {
             Disconnect();
+            ReleaseInstanceObject();
         }
 
         public void Connect(Source source)
@@ -136,10 +136,15 @@ namespace ota.ndi
 
             // Destroy the receiver
             NDIlib.recv_destroy(_recvInstancePtr);
-
+            _recvInstancePtr = IntPtr.Zero;
             // set function status to defaults
             IsPtz = false;
             IsRecordingSupported = false;
+        }
+
+        void ReleaseInstanceObject()
+        {
+            Destroy(texture);
         }
 
         private void SetTallyIndicators(bool onProgram, bool onPreview)
@@ -236,7 +241,12 @@ namespace ota.ndi
                             //Debug.Log("Finish!!!!!");
 
                             //Destroy(_image.texture);
-                            if (texture == null) texture = new RenderTexture(xres, yres, 0);
+                            if (texture == null)
+                            {
+                                texture = new RenderTexture(xres, yres, 0);
+                                texture.Create();
+                            }
+                            texture.Release();
                             texture = _formatConverter.Decode(xres, yres, videoFrame.p_data);
                             _image.texture = texture;
 

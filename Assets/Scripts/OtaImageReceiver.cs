@@ -22,6 +22,17 @@ public class OtaImageReceiver : MonoBehaviour
         _demuxMaterial = new Material(_demuxShader);
     }
 
+    private void OnDestroy()
+    {
+        ReleaseInstanceObject();
+    }
+
+    void ReleaseInstanceObject()
+    {
+        Destroy(ColorTexture);
+        Destroy(DepthTexture);
+    }
+
     // Update is called once per frame
     void Update()
     {
