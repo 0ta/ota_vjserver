@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,6 +21,7 @@ namespace ota.ndi
         [SerializeField] private RawImage _image = null;
 
         [HideInInspector] public RenderTexture texture = null;
+        [HideInInspector] public MetadataInfo metadata = null;
 
         [Description("Does the current source support PTZ functionality?")]
         public bool IsPtz
@@ -254,12 +257,14 @@ namespace ota.ndi
                             //_texture.Apply();
 
                             //String metadata = UTF.Utf8ToString(videoFrame.p_data, (uint)videoFrame.length - 1);
-                            String metadata;
+                            String metadatastr;
                             if (videoFrame.p_metadata != IntPtr.Zero)
-                                metadata = Marshal.PtrToStringAnsi(videoFrame.p_metadata);
+                                metadatastr = Marshal.PtrToStringAnsi(videoFrame.p_metadata);
                             else
-                                metadata = "metadata is null";
-                            //Debug.Log(metadata);
+                                metadatastr = "metadata is null";
+
+                            updateMetadata(metadatastr);
+
                             NDIlib.recv_free_video_v2(_recvInstancePtr, ref videoFrame);
                         }, null);
 
@@ -295,6 +300,18 @@ namespace ota.ndi
                         break;
                 }
             }
+        }
+
+        private void updateMetadata(String metadatastr)
+        {
+            Regex reg = new Regex("\\{\"arcameraPosition\".+\"\\}", RegexOptions.Singleline);
+            var match = reg.Match(metadatastr);
+            var json = match.ToString();
+            if (json != null)
+            {
+                metadata = JsonConvert.DeserializeObject<MetadataInfo>(json);
+            }
+
         }
     }
 }

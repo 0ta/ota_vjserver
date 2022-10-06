@@ -65,6 +65,7 @@ namespace ota.ndi
             return _decoderOutput;
         }
 
+        // This method is for just a test purpose.
         private Color[] GetPixels()
         {
             // アクティブなレンダーテクスチャをキャッシュしておく
