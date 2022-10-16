@@ -21,7 +21,7 @@ namespace ota.ndi
         [SerializeField] private RawImage _image = null;
 
         [HideInInspector] public RenderTexture texture = null;
-        [HideInInspector] public MetadataInfo metadata = null;
+        [HideInInspector] public string metadatastr = null;
 
         [Description("Does the current source support PTZ functionality?")]
         public bool IsPtz
@@ -208,7 +208,7 @@ namespace ota.ndi
                             //int stride = videoFrame.line_stride_in_bytes;
                             //int bufferSize = yres * stride;
                             //int bufferSize = yres * xres * 4;
-                            Debug.Log(yres + "/" + xres);
+                            //Debug.Log(yres + "/" + xres);
                             //Debug.Log(bufferSize);
                             //Debug.Log(videoFrame.line_stride_in_bytes);
                             //if (_texture == null)
@@ -257,14 +257,11 @@ namespace ota.ndi
                             //_texture.Apply();
 
                             //String metadata = UTF.Utf8ToString(videoFrame.p_data, (uint)videoFrame.length - 1);
-                            String metadatastr;
                             if (videoFrame.p_metadata != IntPtr.Zero)
                                 metadatastr = Marshal.PtrToStringAnsi(videoFrame.p_metadata);
                             else
                                 metadatastr = "metadata is null";
-
-                            updateMetadata(metadatastr);
-
+                            //Debug.Log(metadatastr);
                             NDIlib.recv_free_video_v2(_recvInstancePtr, ref videoFrame);
                         }, null);
 
@@ -300,18 +297,6 @@ namespace ota.ndi
                         break;
                 }
             }
-        }
-
-        private void updateMetadata(String metadatastr)
-        {
-            Regex reg = new Regex("\\{\"arcameraPosition\".+\"\\}", RegexOptions.Singleline);
-            var match = reg.Match(metadatastr);
-            var json = match.ToString();
-            if (json != null)
-            {
-                metadata = JsonConvert.DeserializeObject<MetadataInfo>(json);
-            }
-
         }
     }
 }

@@ -18,10 +18,7 @@ namespace ota.ndi
 
         private Thread _receiveThread = null;
         private bool _exitThread = false;
-
         private bool _stopFinder = false;
-
-        private Texture2D _texture = null;
 
         private ObservableCollection<Source> _sourceList = new ObservableCollection<Source>();
 
@@ -110,6 +107,11 @@ namespace ota.ndi
 
                     // .Net doesn't handle marshaling UTF-8 strings properly.
                     String name = UTF.Utf8ToString(src.p_ndi_name);
+
+                    //　とりあえず。。。。
+                    if (!name.Contains("otatestndi")) continue;
+                    
+                    
                     if (_sourceList.All(item => item.Name != name))
                     {
                         Source source = new Source(src);

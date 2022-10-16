@@ -25,7 +25,7 @@ float4 Fragment(float4 vertex : SV_Position,
 #ifdef OTA_DEMUX_DEPTH
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
-//float2 _DepthRange;
+float2 _DepthRange;
 
 // Hue value calculation
 float RGB2Hue(float3 c)
@@ -43,8 +43,8 @@ float RGB2Hue(float3 c)
 float RGB2Depth(float3 rgb)
 {
     float hue = RGB2Hue(LinearToSRGB(rgb));
-    return hue;
-    //return lerp(_DepthRange.x, _DepthRange.y, hue);
+    //return hue;
+    return lerp(_DepthRange.x, _DepthRange.y, hue);
 }
 
 float4 Fragment(float4 vertex : SV_Position,

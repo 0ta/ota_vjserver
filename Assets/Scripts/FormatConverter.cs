@@ -29,7 +29,7 @@ namespace ota.ndi
 
         public RenderTexture Decode(int width, int height, IntPtr data, bool enableAlpha = true)
         {
-            var dataCount = Utils.FrameDataCount(width, height, enableAlpha);
+            var dataCount = FrameUtils.FrameDataCount(width, height, enableAlpha);
             // Input buffer allocation
             if (_decoderInput == null)
             {
