@@ -22,6 +22,7 @@ namespace ota.ndi
 
         [HideInInspector] public RenderTexture texture = null;
         [HideInInspector] public string metadatastr = null;
+        [HideInInspector] public string bgmetadatastr = null;
 
         [Description("Does the current source support PTZ functionality?")]
         public bool IsPtz
@@ -251,7 +252,7 @@ namespace ota.ndi
                             }
                             texture.Release();
                             texture = _formatConverter.Decode(xres, yres, videoFrame.p_data);
-                            _image.texture = texture;
+                            //_image.texture = texture;
 
                             //_texture.LoadRawTextureData(videoFrame.p_data, bufferSize);
                             //_texture.Apply();
@@ -292,6 +293,9 @@ namespace ota.ndi
                         // String metadata = Utf8ToString(metadataFrame.p_data, metadataFrame.length - 1);
                         // System.Diagnotics.Debug.Print(metadata);
 
+                        bgmetadatastr = Marshal.PtrToStringAnsi(metadataFrame.p_data);
+                                                
+                        //Debug.Log(bgmetadatastr);
                         // free frames that were received.
                         NDIlib.recv_free_metadata(_recvInstancePtr, ref metadataFrame);
                         break;

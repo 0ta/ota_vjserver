@@ -19,6 +19,7 @@ namespace ota.ndi
         [HideInInspector] public RenderTexture ColorTexture;
         [HideInInspector] public RenderTexture DepthTexture;
         [HideInInspector] public MetadataInfo Metadata;
+        [HideInInspector] public BgMetadataInfo BgMetadata;
 
         Material _demuxMaterial;
 
@@ -43,6 +44,7 @@ namespace ota.ndi
         void Update()
         {
             ExtractMetadata();
+            ExtractBgMetadata();
             ExtractTextures();
         }
 
@@ -55,18 +57,15 @@ namespace ota.ndi
             if (ColorTexture == null) InitializeTextures(source);
 
             // Parameters from metadata
-            Debug.Log("DepthRange!!!");
-            Debug.Log(Metadata.maxDepth);
-            Debug.Log(Metadata.minDepth);
             _demuxMaterial.SetVector("_DepthRange", Metadata.getDepthRange());
 
             // Blit (color/depth)
             ColorTexture.Release();
             Graphics.Blit(source, ColorTexture, _demuxMaterial, 0);
-            _tmpcolorrawimage.texture = ColorTexture;
+            //_tmpcolorrawimage.texture = ColorTexture;
             DepthTexture.Release();
             Graphics.Blit(source, DepthTexture, _demuxMaterial, 1);
-            _tmpdepthrawimage.texture = DepthTexture;
+            //_tmpdepthrawimage.texture = DepthTexture;
         }
 
         void InitializeTextures(RenderTexture source)
@@ -91,6 +90,17 @@ namespace ota.ndi
             if (json != null)
             {
                 Metadata = JsonConvert.DeserializeObject<MetadataInfo>(json);
+            }
+        }
+
+        void ExtractBgMetadata()
+        {
+            Regex reg = new Regex("\\{\"verticesList\".+\\}", RegexOptions.Singleline);
+            var match = reg.Match(_ndiReceiver.bgmetadatastr);
+            var json = match.ToString();
+            if (json != null)
+            {
+                BgMetadata = JsonConvert.DeserializeObject<BgMetadataInfo>(json);
             }
         }
     }

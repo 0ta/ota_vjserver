@@ -56,29 +56,13 @@ namespace ota.ndi
             var extractor = OtavjVFXResource.Extractor;
             var prj = ProjectionUtils.VectorFromReceiver;
             var v2w = ProjectionUtils.CameraToWorldMatrix;
-            //
-            // èÁí∑ÇæÇ©ÇÁå„Ç≈èëÇ´ä∑Ç¶ÇÈ
-            //
-            if (extractor.ColorTexture != null)
-            {
-                component.SetTexture(_colorMapProperty, extractor.ColorTexture);
-            }
-            if (extractor.DepthTexture != null)
-            {
-                component.SetTexture(_depthMapProperty, extractor.DepthTexture);
-            }
-            if(prj is Vector4 prjvalue)
-            {
-                Debug.Log(1 + ":" + prjvalue.ToString("F5"));
-                Debug.Log(2 + ":" + OtavjVFXResource.Extractor.Metadata.getProjectionMatrix());
-                component.SetVector4(_projectionVectorProperty, prjvalue);
-            }
-            if(v2w is Matrix4x4 v2wvalue)
-            {
-                Debug.Log(3 + ":" + v2wvalue);
-                Debug.Log(4 + ":" + OtavjVFXResource.Extractor.Metadata.getDepthRange());
-                component.SetMatrix4x4(_inverseViewMatrixProperty, v2wvalue);
-            }
+
+            if (extractor == null || extractor.Metadata == null) return;
+
+            component.SetTexture(_colorMapProperty, extractor.ColorTexture);
+            component.SetTexture(_depthMapProperty, extractor.DepthTexture);
+            component.SetVector4(_projectionVectorProperty, prj.Value);
+            component.SetMatrix4x4(_inverseViewMatrixProperty, v2w.Value);
         }
     }
 }

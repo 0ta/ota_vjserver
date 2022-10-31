@@ -41,6 +41,13 @@ namespace ota.ndi
             _material.SetTexture("_ColorTexture", extractor.ColorTexture);
             _material.SetTexture("_DepthTexture", extractor.DepthTexture);
 
+
+            //
+            //for test
+            //
+            //
+            _material.SetVector("_Opacity", new Vector2(1.0f, 1.0f));
+
             //CoreUtils.DrawFullScreen
             //  (cmd, _material, _controller.PropertyBlock, _controller.PassNumber);
             CoreUtils.DrawFullScreen(cmd, _material);
