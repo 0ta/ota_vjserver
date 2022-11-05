@@ -46,6 +46,7 @@ namespace ota.ndi {
                     var parent = this.transform.parent;
                     var bgmeshfilter = Instantiate(m_BackgroundMeshPrefab, parent);
                     bgmeshfilter.mesh = meshList[i];
+                    //Debug.Log("Added: " + meshkey);
                     m_MeshMap.Add(meshkey, bgmeshfilter);
                 }
             }
@@ -55,16 +56,20 @@ namespace ota.ndi {
             while (deletedit.MoveNext())
             {
                 var deletedkey = deletedit.Current;
+                //Debug.Log("Deleted: " + deletedkey);
                 RemoveMesh(deletedkey);
             }
-            
         }
 
         void RemoveMesh(string meshId)
         {
-            var bgmeshfilter = m_MeshMap[meshId];
-            Object.Destroy(bgmeshfilter);
-            m_MeshMap.Remove(meshId);
+            if (m_MeshMap.ContainsKey(meshId))
+            {
+                var bgmeshfilter = m_MeshMap[meshId];
+                Object.Destroy(bgmeshfilter);
+                m_MeshMap.Remove(meshId);
+            }
+
         }
     }
 }

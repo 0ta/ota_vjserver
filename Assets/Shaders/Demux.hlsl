@@ -16,7 +16,7 @@ float4 Fragment(float4 vertex : SV_Position,
     float2 texCoord : TEXCOORD0) : SV_Target
 {
     float3 rgb = tex2D(_MainTex, texCoord * float2(0.5, 1)).xyz;
-    float mask = tex2D(_MainTex, texCoord / 2 + float2(0.5, 0.5)).x;
+    float mask = tex2D(_MainTex, texCoord / 2 + float2(0.5, 0)).x;
     return float4(rgb, mask);
 }
 
@@ -50,7 +50,7 @@ float RGB2Depth(float3 rgb)
 float4 Fragment(float4 vertex : SV_Position,
     float2 texCoord : TEXCOORD) : SV_Target
 {
-    return RGB2Depth(tex2D(_MainTex, texCoord / 2 + float2(0.5, 0)).xyz);
+    return RGB2Depth(tex2D(_MainTex, texCoord / 2 + float2(0.5, 0.5)).xyz);
 }
 
 #endif

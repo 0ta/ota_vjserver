@@ -165,6 +165,8 @@ void FullScreenPass(Varyings varyings,
     bool mask = c.a > 0.5 || _Opacity.x > 0;
 
     // Output
+    //outColor = DistanceToDepth(d) * mask + _DepthOffset;
     outColor = c;
     outDepth = DistanceToDepth(d) * mask + _DepthOffset;
+    //outDepth = 0;
 }

@@ -1362,7 +1362,7 @@ MonoBehaviour:
   m_Parent: {fileID: 114350483966674976}
   m_Children:
   - {fileID: 8926484042661614692}
-  m_UIPosition: {x: 1275, y: 1084}
+  m_UIPosition: {x: 1274, y: 1080}
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots: []
@@ -1506,7 +1506,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
           PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0.03
+      m_SerializableObject: 0
     m_Space: 2147483647
   m_Property:
     name: DepthOffset
@@ -3589,7 +3589,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
           PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0.01
+      m_SerializableObject: 0.05
     m_Space: 2147483647
   m_Property:
     name: Size
@@ -5757,9 +5757,9 @@ MonoBehaviour:
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
+  - {fileID: 8926484042661614988}
   - {fileID: 8926484042661614986}
   - {fileID: 8926484042661614987}
-  - {fileID: 8926484042661614988}
   m_OutputSlots:
   - {fileID: 8926484042661614991}
   m_Subgraph: {fileID: 5371698745253816930, guid: 1b739802f75821947922d2af8a3a22a8,

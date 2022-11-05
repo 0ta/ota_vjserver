@@ -182,7 +182,8 @@ MonoBehaviour:
     - outputSlot: {fileID: 32}
       inputSlot: {fileID: 205}
     position: {x: 1448.0238, y: -33.11755}
-    expandedSlots: []
+    expandedSlots:
+    - {fileID: 32}
     expanded: 1
 --- !u!114 &32
 MonoBehaviour:
@@ -329,9 +330,9 @@ MonoBehaviour:
     linkedSlots:
     - outputSlot: {fileID: 36}
       inputSlot: {fileID: 285}
-    position: {x: 2538, y: 420}
+    position: {x: 2485, y: 528}
     expandedSlots: []
-    expanded: 0
+    expanded: 1
 --- !u!114 &36
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3633,7 +3634,7 @@ MonoBehaviour:
   - {fileID: 288}
   - {fileID: 289}
   m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
+  m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_MasterSlot: {fileID: 286}
   m_MasterData:

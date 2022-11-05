@@ -76,7 +76,7 @@ void DecodeUYVA_sRGB(uint2 id : SV_DispatchThreadID)
     float4x4 d = DecodeUYVA(id);
     uint2 dp = id * uint2(4, 1);
 
-    dp = Inversion(dp);
+    //dp = Inversion(dp);
 
     Destination[dp + uint2(0, 0)] = d[0];
     Destination[dp + uint2(1, 0)] = d[1];
