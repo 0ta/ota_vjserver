@@ -46,10 +46,14 @@ namespace ota.ndi
             //for test
             //
             _material.SetVector("_Opacity", new Vector2(1.0f, 1.0f));
+            var eparams = new Vector4
+              (0.8f, 0.8f, 0, 0);
+            _material.SetVector("_EffectParams", eparams);
+
 
             //CoreUtils.DrawFullScreen
             //  (cmd, _material, _controller.PropertyBlock, _controller.PassNumber);
-            CoreUtils.DrawFullScreen(cmd, _material);
+            CoreUtils.DrawFullScreen(cmd, _material, null, 1);
         }
 
         protected override void Cleanup()

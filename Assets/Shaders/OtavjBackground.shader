@@ -12,16 +12,16 @@
             #include "OtavjBackground.hlsl"
             ENDHLSL
         }
-        //Pass
-        //{
-        //    Cull Off ZWrite On ZTest LEqual
-        //    HLSLPROGRAM
-        //    #pragma vertex Vert
-        //    #pragma fragment FullScreenPass
-        //    #define RCAM_FX0
-        //    #include "RcamBackground.hlsl"
-        //    ENDHLSL
-        //}
+        Pass
+        {
+            Cull Off ZWrite On ZTest LEqual
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment FullScreenPass
+            #define OTAVJ_FX0
+            #include "OtavjBackground.hlsl"
+            ENDHLSL
+        }
         //Pass
         //{
         //    Cull Off ZWrite On ZTest LEqual
