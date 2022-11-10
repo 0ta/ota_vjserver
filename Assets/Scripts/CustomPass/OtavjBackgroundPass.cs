@@ -46,8 +46,7 @@ namespace ota.ndi
             //for test
             //
             _material.SetVector("_Opacity", new Vector2(1.0f, 1.0f));
-            var eparams = new Vector4
-              (0.8f, 0.8f, 0, 0);
+            var eparams = new Vector4(0.8f, 0.8f, 0, 0);
             _material.SetVector("_EffectParams", eparams);
 
 
