@@ -26,6 +26,142 @@ float3 DistanceToWorldPosition(float2 uv, float d)
     return mul(_InverseViewMatrix, float4(p * d, 1)).xyz;
 }
 
+uint hashIQ(uint n)
+{
+    // integer hash copied from Hugo Elias
+    n = (n << 13U) ^ n;
+    return n * (n * n * 15731U + 789221U) + 1376312589U;
+}
+
+float hashIQf(uint n)
+{
+    n = hashIQ(n);
+    return float(n & 0x7fffffffU) / float(0x7fffffff);
+}
+
+float3 rgb2hsv(float3 rgb)
+{
+    float3 hsv;
+
+            // RGBの三つの値で最大のもの
+    float maxValue = max(rgb.r, max(rgb.g, rgb.b));
+            // RGBの三つの値で最小のもの
+    float minValue = min(rgb.r, min(rgb.g, rgb.b));
+            // 最大値と最小値の差
+    float delta = maxValue - minValue;
+            
+            // V（明度）
+            // 一番強い色をV値にする
+    hsv.z = maxValue;
+            
+            // S（彩度）
+            // 最大値と最小値の差を正規化して求める
+    if (maxValue != 0.0)
+    {
+        hsv.y = delta / maxValue;
+    }
+    else
+    {
+        hsv.y = 0.0;
+    }
+            
+            // H（色相）
+            // RGBのうち最大値と最小値の差から求める
+    if (hsv.y > 0.0)
+    {
+        if (rgb.r == maxValue)
+        {
+            hsv.x = (rgb.g - rgb.b) / delta;
+        }
+        else if (rgb.g == maxValue)
+        {
+            hsv.x = 2 + (rgb.b - rgb.r) / delta;
+        }
+        else
+        {
+            hsv.x = 4 + (rgb.r - rgb.g) / delta;
+        }
+        hsv.x /= 6.0;
+        if (hsv.x < 0)
+        {
+            hsv.x += 1.0;
+        }
+    }
+            
+    return hsv;
+}
+        
+// HSV->RGB変換
+float3 hsv2rgb(float3 hsv)
+{
+    float3 rgb;
+
+    if (hsv.y == 0)
+    {
+        // S（彩度）が0と等しいならば無色もしくは灰色
+        rgb.r = rgb.g = rgb.b = hsv.z;
+    }
+    else
+    {
+        // 色環のH（色相）の位置とS（彩度）、V（明度）からRGB値を算出する
+        hsv.x *= 6.0;
+        float i = floor(hsv.x);
+        float f = hsv.x - i;
+        float aa = hsv.z * (1 - hsv.y);
+        float bb = hsv.z * (1 - (hsv.y * f));
+        float cc = hsv.z * (1 - (hsv.y * (1 - f)));
+        if (i < 1)
+        {
+            rgb.r = hsv.z;
+            rgb.g = cc;
+            rgb.b = aa;
+        }
+        else if (i < 2)
+        {
+            rgb.r = bb;
+            rgb.g = hsv.z;
+            rgb.b = aa;
+        }
+        else if (i < 3)
+        {
+            rgb.r = aa;
+            rgb.g = hsv.z;
+            rgb.b = cc;
+        }
+        else if (i < 4)
+        {
+            rgb.r = aa;
+            rgb.g = bb;
+            rgb.b = hsv.z;
+        }
+        else if (i < 5)
+        {
+            rgb.r = cc;
+            rgb.g = aa;
+            rgb.b = hsv.z;
+        }
+        else
+        {
+            rgb.r = hsv.z;
+            rgb.g = aa;
+            rgb.b = bb;
+        }
+    }
+    return rgb;
+}
+
+float getTickedTime(float delta)
+{
+    float time = _Time.y;
+    float garbage = fmod(time, delta);
+    return time - garbage;
+}
+
+float2 remap(float2 In, float2 InMinMax, float2 OutMinMax)
+{
+    return OutMinMax.x + (In - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);
+}
+
 float4 taylorInvSqrt(float4 r)
 {
     return (float4) 1.79284291400159 - r * 0.85373472095314;
@@ -155,8 +291,13 @@ float snoise(float2 v)
     return 130.0 * dot(m, g);
 }
 
+float random(float p)
+{
+    return frac(sin(dot(float2(p, p), float2(12.9898, 78.233))) * 43758.5453123);
+}
+
 float random(float2 p) {
-    return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453);
+    return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453123);
 }
 
 // float2 should be normalized float2
@@ -164,14 +305,14 @@ float random_A(float2 st) {
     return frac(sin(dot(st.xy, float2(13451111.9898, 80.233))) * 43758.5453123);
 }
 
-float random_B(float2 st)
-{
-    return frac(sin(dot(st.xy, float2(12.9898, 78.233))) * 43758.5453123);
-}
+//float random_B(float2 st)
+//{
+//    return frac(sin(dot(st.xy, float2(12.9898, 78.233))) * 43758.5453123);
+//}
 
 float randomSerie(float x, float freq, float t)
 {
-    return step(.8, random_B(floor(x * freq) - floor(t)));
+    return step(.8, random(floor(x * freq) - floor(t)));
 }
 
 float noise(float2 st)
@@ -260,7 +401,7 @@ float3 ForegroundEffect(float3 wpos, float2 uv, float luma)
     //    t *= -1.0;
     //}
 
-    //freq += random_B(floor(st.y));
+    //freq += random(floor(st.y));
 
     //float offset = 0.025;
     //color = float3(randomSerie(st.x, freq * 100., t + offset),
@@ -291,7 +432,7 @@ float3 ForegroundEffect(float3 wpos, float2 uv, float luma)
     //float2 st = uv * 70.0;
     //float2 ipos = floor(st);
     //float2 fpos = frac(st);
-    //float d = random_B(ipos + _Time.w);
+    //float d = random(ipos + _Time.w);
     //return float3(d, d, d);
 
     //pattern A
@@ -302,52 +443,88 @@ float3 ForegroundEffect(float3 wpos, float2 uv, float luma)
 
 
 
-
+    //pattern F
     //// Animated zebra
 
-    //// Noise field positions
-    float3 np1 = float3(wpos.y * 16, 0, _Time.y);
-    float3 np2 = float3(wpos.y * 32, 0, _Time.y * 2) * 0.8;
+    ////// Noise field positions
+    //float3 np1 = float3(wpos.y * 16, 0, _Time.y);
+    //float3 np2 = float3(wpos.y * 32, 0, _Time.y * 2) * 0.8;
 
-    // Potential value
-    float pt = (luma - 0.5) + snoise(np1) + snoise(np2);
+    //// Potential value
+    //float pt = (luma - 0.5) + snoise(np1) + snoise(np2);
 
-    // Grayscale
-    float gray = abs(pt) < _EffectParams.x + 0.02;
+    //// Grayscale
+    //float gray = abs(pt) < _EffectParams.x + 0.02;
 
-    // Emission
-    float em = _EffectParams.y * 4;
+    //// Emission
+    //float em = _EffectParams.y * 4;
 
-    // Output
-    return gray * (1 + em);
+    //// Output
+    //return gray * (1 + em);
 
+    //pattern G
+    float delta = 1.0f / 15.0f;
+    //float glitchStep = lerp(4.0f, 32.0f, random(getTickedTime(delta)));
+    
+    //float4 screenColor = tex2D(_ColorTexture, uv);
+    
+    //uv.x = round(uv.x * glitchStep) / glitchStep;
+    //float4 glitchColor = tex2D(_ColorTexture, uv);
+    
+    //return lerp(screenColor, glitchColor, float4(0.3f, 0.3f, 0.3f, 0.3f)).xyz;
+    
+    //pattern H
+    ////float intensity = clamp(2.0f * sin(getTickedTime(delta)), 0.0f, 10.0f);
+    ////intensity *= 1.5f;
+    //float intensity = 1.5f;
+    
+    //float texc1 = tex2D(_ColorTexture, frac(uv + random(float2(getTickedTime(delta), 0.25f)) * 10.0f) * 0.75f).r;
+    //float texc2 = tex2D(_ColorTexture, frac(uv + random(float2(getTickedTime(delta), 0.78f)) * 10.0f) * 0.5f).r;
+    
+    //// recalculate intensity
+    //float prechrOffset = step(0.5f * (texc1 + texc2), 0.5f);
+    //float chrOffset = (2.0f * prechrOffset + 1.0f) * 0.005f * intensity;
+    
+    //float4 screenColor = tex2D(_ColorTexture, uv);
+    //float chrColR = tex2D(_ColorTexture, float2(uv.x + chrOffset, uv.y)).r;
+    //float chrColB = tex2D(_ColorTexture, float2(uv.x - chrOffset, uv.y)).b;
+    //return float3(chrColR, screenColor.g, chrColB);
+    
+    // pattern I
+    //float n = snoise((uv * 10) + _Time.y);
+    //float rmn = remap(n, float2(0, 1), float2(0, 0.03));
+    //uv += rmn;
+    //return tex2D(_ColorTexture, uv).xyz;
+    
+    
 //#endif
 //
 //#if defined(RCAM_FX1)
 //
-//    // Marble-like pattern
-//
-//    // Frequency
-//    float freq = lerp(2.75, 20, _EffectParams.x);
-//
-//    // Noise field position
-//    float3 np = wpos * float3(1.2, freq, 1.2);
-//    np += float3(0, -0.784, 0) * _Time.y;
-//
-//    // Potential value
-//    float pt = 0.5 + (luma - 0.5) * 0.4 + snoise(np) * 0.7;
-//
-//    // Random seed
-//    uint seed = (uint)(pt * 5 + _Time.y * 5) * 2;
-//
-//    // Color
-//    float3 rgb = FastSRGBToLinear(HsvToRgb(float3(Hash(seed), 1, 1)));
-//
-//    // Emission
-//    float em = Hash(seed + 1) < _EffectParams.y * 0.5;
-//
-//    // Output
-//    return rgb * (1 + em * 8) + em;
+    // Marble-like pattern
+
+    // Frequency
+    float freq = lerp(2.75, 20, _EffectParams.x);
+
+    // Noise field position
+    float3 np = wpos * float3(1.2, freq, 1.2);
+    np += float3(0, -0.784, 0) * _Time.y;
+
+    // Potential value
+    float pt = 0.5 + (luma - 0.5) * 0.4 + snoise(np) * 0.7;
+
+    // Random seed
+    uint seed = (uint) (pt * 5 + _Time.y * 5) * 2;
+
+    // Color
+    //float3 rgb = FastSRGBToLinear(hsv2rgb(float3(Hash(seed), 1, 1)));
+    float3 rgb = hsv2rgb(float3(hashIQf(seed), 1, 1));
+
+    // Emission
+    float em = hashIQf(seed + 1) < _EffectParams.y * 0.5;
+
+    // Output
+    return rgb * (1 + em * 8) + em;
 //
 //#endif
 //
@@ -420,7 +597,7 @@ void FullScreenPass(Varyings varyings,
     // Foreground effect
     float3 eff = ForegroundEffect(p, uv, lum);
     c.rgb = lerp(c.rgb, eff, c.a * _Opacity.y);
-
+    
 #endif
 
     // BG opacity
@@ -431,8 +608,7 @@ void FullScreenPass(Varyings varyings,
     bool mask = c.a > 0.5 || _Opacity.x > 0;
 
     // Output
-    //outColor = DistanceToDepth(d) * mask + _DepthOffset;
     outColor = c;
+    //outColor = DistanceToDepth(d) * mask + _DepthOffset;
     outDepth = DistanceToDepth(d) * mask + _DepthOffset;
-    //outDepth = 0;
 }
