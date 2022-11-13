@@ -10,12 +10,11 @@ namespace ota.ndi
     sealed class OtavjBackgroundPass : CustomPass
     {
 
-        //public RcamBackgroundController _controller = null;
+        public OtavjBackgroundController _controller = null;
         public bool _depthOffset = false;
         public Shader _shader = null;
 
-        Material _material;
-        
+        Material _material;        
 
         protected override void Setup(ScriptableRenderContext renderContext, CommandBuffer cmd)
         {
@@ -27,7 +26,7 @@ namespace ota.ndi
         protected override void Execute(ScriptableRenderContext renderContext, CommandBuffer cmd,
            HDCamera hdCamera, CullingResults cullingResult)
         {
-            //if (_controller == null || !_controller.IsActive) return;
+            if (_controller == null) return;
 
             var extractor = OtavjVFXResource.Extractor;
             var prj = ProjectionUtils.VectorFromReceiver;
@@ -45,14 +44,17 @@ namespace ota.ndi
             //
             //for test
             //
-            _material.SetVector("_Opacity", new Vector2(0.0f, 1.0f));
-            var eparams = new Vector4(0.8f, 0.8f, 0, 0);
-            _material.SetVector("_EffectParams", eparams);
+            //_Opacity:x ”wŒi‚ð‚ð•\Ž¦‚·‚é‚©”Û‚©   0:Black -> 1:Original color
+            //_Opacity:y Human effect‚Ì‚©‚©‚è‹ï‡ 0:Oricinal color -> 1:Effect
+            //_material.SetVector("_Opacity", new Vector2(1.0f, 0.0f));
+            //var eparams = new Vector4(0.8f, 0.8f, 0, 0);
+            //_material.SetVector("_EffectParams", eparams);
+            //_material.SetInt("_BgPattern", 2);
+            //
+            //CoreUtils.DrawFullScreen(cmd, _material, null, 1);
 
+            CoreUtils.DrawFullScreen(cmd, _material, _controller.PropertyBlock, _controller.PassNumber);
 
-            //CoreUtils.DrawFullScreen
-            //  (cmd, _material, _controller.PropertyBlock, _controller.PassNumber);
-            CoreUtils.DrawFullScreen(cmd, _material, null, 1);
         }
 
         protected override void Cleanup()

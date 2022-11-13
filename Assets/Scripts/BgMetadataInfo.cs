@@ -54,8 +54,8 @@ namespace ota.ndi
                 // Create Mesh
                 Mesh mesh = new Mesh();
                 mesh.vertices = vertarray;
-                //mesh.triangles = triarray;
                 mesh.SetIndices(triarray, MeshTopology.Lines, 0);
+                //mesh.triangles = triarray;
                 ret.Add(mesh);
             }
             return ret;

@@ -1,4 +1,6 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/RenderPass/CustomPass/CustomPassCommon.hlsl"
+#include "OtaVjNoiseCommon.hlsl"
+#include "OtaVjColorCommon.hlsl"
 //#include "Packages/jp.keijiro.noiseshader/Shader/SimplexNoise3D.hlsl"
 
 sampler2D _ColorTexture;
@@ -9,6 +11,9 @@ float _DepthOffset;
 
 float2 _Opacity; // Background, Effect
 float4 _EffectParams; // param, intensity, sin(r), cos(r)
+int _BgPattern; // 0: Normal, 1: Noise, 2: Distortion
+
+static float delta = 1.0f / 15.0f;
 
 // Linear distance to Z depth
 float DistanceToDepth(float d)
@@ -26,130 +31,6 @@ float3 DistanceToWorldPosition(float2 uv, float d)
     return mul(_InverseViewMatrix, float4(p * d, 1)).xyz;
 }
 
-uint hashIQ(uint n)
-{
-    // integer hash copied from Hugo Elias
-    n = (n << 13U) ^ n;
-    return n * (n * n * 15731U + 789221U) + 1376312589U;
-}
-
-float hashIQf(uint n)
-{
-    n = hashIQ(n);
-    return float(n & 0x7fffffffU) / float(0x7fffffff);
-}
-
-float3 rgb2hsv(float3 rgb)
-{
-    float3 hsv;
-
-            // RGBの三つの値で最大のもの
-    float maxValue = max(rgb.r, max(rgb.g, rgb.b));
-            // RGBの三つの値で最小のもの
-    float minValue = min(rgb.r, min(rgb.g, rgb.b));
-            // 最大値と最小値の差
-    float delta = maxValue - minValue;
-            
-            // V（明度）
-            // 一番強い色をV値にする
-    hsv.z = maxValue;
-            
-            // S（彩度）
-            // 最大値と最小値の差を正規化して求める
-    if (maxValue != 0.0)
-    {
-        hsv.y = delta / maxValue;
-    }
-    else
-    {
-        hsv.y = 0.0;
-    }
-            
-            // H（色相）
-            // RGBのうち最大値と最小値の差から求める
-    if (hsv.y > 0.0)
-    {
-        if (rgb.r == maxValue)
-        {
-            hsv.x = (rgb.g - rgb.b) / delta;
-        }
-        else if (rgb.g == maxValue)
-        {
-            hsv.x = 2 + (rgb.b - rgb.r) / delta;
-        }
-        else
-        {
-            hsv.x = 4 + (rgb.r - rgb.g) / delta;
-        }
-        hsv.x /= 6.0;
-        if (hsv.x < 0)
-        {
-            hsv.x += 1.0;
-        }
-    }
-            
-    return hsv;
-}
-        
-// HSV->RGB変換
-float3 hsv2rgb(float3 hsv)
-{
-    float3 rgb;
-
-    if (hsv.y == 0)
-    {
-        // S（彩度）が0と等しいならば無色もしくは灰色
-        rgb.r = rgb.g = rgb.b = hsv.z;
-    }
-    else
-    {
-        // 色環のH（色相）の位置とS（彩度）、V（明度）からRGB値を算出する
-        hsv.x *= 6.0;
-        float i = floor(hsv.x);
-        float f = hsv.x - i;
-        float aa = hsv.z * (1 - hsv.y);
-        float bb = hsv.z * (1 - (hsv.y * f));
-        float cc = hsv.z * (1 - (hsv.y * (1 - f)));
-        if (i < 1)
-        {
-            rgb.r = hsv.z;
-            rgb.g = cc;
-            rgb.b = aa;
-        }
-        else if (i < 2)
-        {
-            rgb.r = bb;
-            rgb.g = hsv.z;
-            rgb.b = aa;
-        }
-        else if (i < 3)
-        {
-            rgb.r = aa;
-            rgb.g = hsv.z;
-            rgb.b = cc;
-        }
-        else if (i < 4)
-        {
-            rgb.r = aa;
-            rgb.g = bb;
-            rgb.b = hsv.z;
-        }
-        else if (i < 5)
-        {
-            rgb.r = cc;
-            rgb.g = aa;
-            rgb.b = hsv.z;
-        }
-        else
-        {
-            rgb.r = hsv.z;
-            rgb.g = aa;
-            rgb.b = bb;
-        }
-    }
-    return rgb;
-}
-
 float getTickedTime(float delta)
 {
     float time = _Time.y;
@@ -162,345 +43,214 @@ float2 remap(float2 In, float2 InMinMax, float2 OutMinMax)
     return OutMinMax.x + (In - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);
 }
 
-float4 taylorInvSqrt(float4 r)
+float3 effectMonoPatternA(float3 wpos, float2 uv, float luma)
 {
-    return (float4) 1.79284291400159 - r * 0.85373472095314;
+    float c = random_A(normalize(uv.y + _Time.w));
+    return float3(c, c, c);
 }
 
-float4 mod289(float4 x)
+float3 effectMonoPatternAd(float3 wpos, float2 uv, float luma)
 {
-    return x - floor(x / 289.0) * 289.0;
+    float c1 = random_A(normalize(uv.x + _Time.w));
+    float c2 = random_A(normalize(uv.x + _Time.x));
+    float c3 = random_A(normalize(uv.x + _Time.z));
+    return float3(c1, c2, c3) * 1.3f;
 }
 
-float3 mod289(float3 x)
+float3 effectMonoPatternB(float3 wpos, float2 uv, float luma)
 {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
+    float2 st = uv * 70.0;
+    float2 ipos = floor(st);
+    float2 fpos = frac(st);
+    float c1 = random(ipos + _Time.w);
+    float c2 = random(ipos + _Time.x);
+    float c3 = random(ipos + _Time.z);
+    return float3(c1, c2, c3);
 }
-float2 mod289(float2 x)
+
+float3 effectMonoPatternC(float3 wpos, float2 uv, float luma)
 {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
+    const float2 vp = float2(320.0, 200.0);
+    float t = _Time.w;
+    float2 p0 = (uv - 0.5) * vp;
+    float2 hvp = vp * 0.5;
+    float2 p1d = float2(cos(t / 98.0), sin(t / 178.0)) * hvp - p0;
+    float2 p2d = float2(sin(-t / 124.0), cos(-t / 104.0)) * hvp - p0;
+    float2 p3d = float2(cos(-t / 165.0), cos(t / 45.0)) * hvp - p0;
+    float sum = 0.5 + 0.5 * (
+		cos(length(p1d) / 30.0) +
+		cos(length(p2d) / 20.0) +
+		sin(length(p3d) / 25.0) * sin(p3d.x / 20.0) * sin(p3d.y / 15.0));
+    return tex2D(_ColorTexture, frac(uv + float2(frac(sum), frac(sum)))).rgb;
 }
-float4 permute(float4 x)
+
+float3 effectMonoPatternD(float3 wpos, float2 uv, float luma)
 {
-    return mod289(((x * 34.0) + 1.0) * x);
+    float2 st = uv;
+    st.x *= _ScreenSize.x / _ScreenSize.y;
+
+    float3 color = float3(0.0, 0.0, 0.0);
+
+    float cols = 2.;
+    float freq = random(floor(_Time.w)) + abs(atan(_Time.w) * 0.1);
+    float t = 60. + _Time.w * (1.0 - freq) * 30.;
+
+    if (frac(st.y * cols * 0.5) < 0.5)
+    {
+        t *= -1.0;
+    }
+
+    freq += random(floor(st.y));
+
+    float offset = 0.025;
+    color = float3(randomSerie(st.x, freq * 100., t + offset),
+                 randomSerie(st.x, freq * 100., t),
+                 randomSerie(st.x, freq * 100., t - offset));
+    //color = float3(randomSerie(st.y, freq * 100., t + offset),
+    //             randomSerie(st.y, freq * 100., t),
+    //             randomSerie(st.y, freq * 100., t - offset));
+    return color;
 }
-float3 permute(float3 x)
+
+float3 effectMonoPatternE(float3 wpos, float2 uv, float luma)
 {
-    return mod289(((x * 34.0) + 1.0) * x);
+    float2 st = uv;
+    st.x *= _ScreenSize.x / _ScreenSize.y;
+    float3 color = float3(0.0, 0.0, 0.0);
+    float2 pos = float2(st * 3.);
+
+    float DF = 0.0;
+
+    //// Add a random position
+    float a = 0.0;
+    float2 vel = float2(_Time.w * .1, _Time.w * .1);
+    DF += snoise(pos + vel) * .25 + .25;
+
+    //// Add a random position
+    a = snoise(pos * float2(cos(_Time.w * 0.15), sin(_Time.w * 0.1)) * 0.1) * 3.1415;
+    vel = float2(cos(a), sin(a));
+    DF += snoise(pos + vel) * .25 + .25;
+
+    float ssv = smoothstep(.7, .75, frac(DF));
+    color = float3(ssv, ssv, ssv);
+
+    return float3(1.0 - color);
 }
 
-float snoise(float3 v)
+float3 effectMonoPatternF(float3 wpos, float2 uv, float luma)
 {
-    const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
-    const float4 D = float4(0.0, 0.5, 1.0, 2.0);
+    //// Animated zebra
 
-// First corner
-    float3 i = floor(v + dot(v, C.yyy));
-    float3 x0 = v - i + dot(i, C.xxx);
+    //// Noise field positions
+    float3 np1 = float3(wpos.y * 16, 0, _Time.y);
+    float3 np2 = float3(wpos.y * 32, 0, _Time.y * 2) * 0.8;
 
-// Other corners
-    float3 g = step(x0.yzx, x0.xyz);
-    float3 l = 1.0 - g;
-    float3 i1 = min(g.xyz, l.zxy);
-    float3 i2 = max(g.xyz, l.zxy);
+    // Potential value
+    float pt = (luma - 0.5) + snoise(np1) + snoise(np2);
 
-  //     x0 = x0 - 0.0 + 0.0 * C.xxx;
-  //     x1 = x0 - i1  + 1.0 * C.xxx;
-  //     x2 = x0 - i2  + 2.0 * C.xxx;
-  //     x3 = x0 - 1.0 + 3.0 * C.xxx;
-    float3 x1 = x0 - i1 + C.xxx;
-    float3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
-    float3 x3 = x0 - D.yyy; // -1.0+3.0*C.x = -0.5 = -D.y
+    // Grayscale
+    float gray = abs(pt) < _EffectParams.x + 0.02;
 
-// Permutations
-    i = mod289(i);
-    float4 p = permute(permute(permute(
-               i.z + float4(0.0, i1.z, i2.z, 1.0))
-             + i.y + float4(0.0, i1.y, i2.y, 1.0))
-             + i.x + float4(0.0, i1.x, i2.x, 1.0));
+    // Emission
+    float em = _EffectParams.y * 4;
 
-// Gradients: 7x7 points over a square, mapped onto an octahedron.
-// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-    float2 ns = D.wy / 7 - D.xz;
-
-    float4 j = p - 49.0 * floor(p / 49); //  mod(p,7*7)
-
-    float4 x_ = floor(j / 7);
-    float4 y_ = floor(j - 7.0 * x_); // mod(j,N)
-
-    float4 x = x_ * ns.x + ns.yyyy;
-    float4 y = y_ * ns.x + ns.yyyy;
-    float4 h = 1.0 - abs(x) - abs(y);
-
-    float4 b0 = float4(x.xy, y.xy);
-    float4 b1 = float4(x.zw, y.zw);
-
-  //float4 s0 = float4(lessThan(b0,0.0))*2.0 - 1.0;
-  //float4 s1 = float4(lessThan(b1,0.0))*2.0 - 1.0;
-    float4 s0 = floor(b0) * 2.0 + 1.0;
-    float4 s1 = floor(b1) * 2.0 + 1.0;
-    float4 sh = -step(h, 0.0);
-
-    float4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
-    float4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
-
-    float3 p0 = float3(a0.xy, h.x);
-    float3 p1 = float3(a0.zw, h.y);
-    float3 p2 = float3(a1.xy, h.z);
-    float3 p3 = float3(a1.zw, h.w);
-
-//Normalise gradients
-    float4 norm = taylorInvSqrt(float4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
-    p0 *= norm.x;
-    p1 *= norm.y;
-    p2 *= norm.z;
-    p3 *= norm.w;
-
-// Mix final noise value
-    float4 m = max(0.6 - float4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
-    m = m * m;
-    return 42.0 * dot(m * m, float4(dot(p0, x0), dot(p1, x1),
-                                  dot(p2, x2), dot(p3, x3)));
+    // Output
+    return gray * (1 + em);
 }
 
-float snoise(float2 v)
+float4 effectMonoPatternG_alpha(float3 wpos, float2 uv, float luma)
 {
-    const float4 C = float4(0.211324865405187, // (3.0-sqrt(3.0))/6.0
-                        0.366025403784439, // 0.5*(sqrt(3.0)-1.0)
-                        -0.577350269189626, // -1.0 + 2.0 * C.x
-                        0.024390243902439); // 1.0 / 41.0
-    float2 i = floor(v + dot(v, C.yy));
-    float2 x0 = v - i + dot(i, C.xx);
-    float2 i1;
-    i1 = (x0.x > x0.y) ? float2(1.0, 0.0) : float2(0.0, 1.0);
-    float4 x12 = x0.xyxy + C.xxzz;
-    x12.xy -= i1;
-    i = mod289(i); // Avoid truncation effects in permutation
-    float3 p = permute(permute(i.y + float3(0.0, i1.y, 1.0)) + i.x + float3(0.0, i1.x, 1.0));
-    float3 m = max(0.5 - float3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
-    m = m * m;
-    m = m * m;
-    float3 x = 2.0 * frac(p * C.www) - 1.0;
-    float3 h = abs(x) - 0.5;
-    float3 ox = floor(x + 0.5);
-    float3 a0 = x - ox;
-    m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
-    float3 g;
-    g.x = a0.x * x0.x + h.x * x0.y;
-    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-    return 130.0 * dot(m, g);
+    float glitchStep = lerp(4.0f, 32.0f, random(getTickedTime(delta)));
+    
+    float4 screenColor = tex2D(_ColorTexture, uv);
+    
+    uv.x = round(uv.x * glitchStep) / glitchStep;
+    float4 glitchColor = tex2D(_ColorTexture, uv);
+    
+    return lerp(screenColor, glitchColor, float4(0.3f, 0.3f, 0.3f, 0.3f));
 }
 
-float random(float p)
+float3 effectMonoPatternG(float3 wpos, float2 uv, float luma)
 {
-    return frac(sin(dot(float2(p, p), float2(12.9898, 78.233))) * 43758.5453123);
+    return effectMonoPatternG_alpha(wpos, uv, luma).xyz;
 }
 
-float random(float2 p) {
-    return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453123);
-}
-
-// float2 should be normalized float2
-float random_A(float2 st) {
-    return frac(sin(dot(st.xy, float2(13451111.9898, 80.233))) * 43758.5453123);
-}
-
-//float random_B(float2 st)
-//{
-//    return frac(sin(dot(st.xy, float2(12.9898, 78.233))) * 43758.5453123);
-//}
-
-float randomSerie(float x, float freq, float t)
+float3 effectMonoPatternH(float3 wpos, float2 uv, float luma)
 {
-    return step(.8, random(floor(x * freq) - floor(t)));
+    //float intensity = clamp(2.0f * sin(getTickedTime(delta)), 0.0f, 10.0f);
+    //intensity *= 1.5f;
+    float intensity = 1.5f;
+    
+    float texc1 = tex2D(_ColorTexture, frac(uv + random(float2(getTickedTime(delta), 0.25f)) * 10.0f) * 0.75f).r;
+    float texc2 = tex2D(_ColorTexture, frac(uv + random(float2(getTickedTime(delta), 0.78f)) * 10.0f) * 0.5f).r;
+    
+    // recalculate intensity
+    float prechrOffset = step(0.5f * (texc1 + texc2), 0.5f);
+    float chrOffset = (2.0f * prechrOffset + 1.0f) * 0.005f * intensity;
+    
+    float4 screenColor = tex2D(_ColorTexture, uv);
+    float chrColR = tex2D(_ColorTexture, float2(uv.x + chrOffset, uv.y)).r;
+    float chrColB = tex2D(_ColorTexture, float2(uv.x - chrOffset, uv.y)).b;
+    return float3(chrColR, screenColor.g, chrColB);
 }
 
-float noise(float2 st)
+float3 effectMonoPatternI(float3 wpos, float2 uv, float luma)
 {
-    float2 p = floor(st);
-    return random(p);
-}
-
-float noiseA(float2 st) {
-    float2 i = floor(st);
-    float2 f = frac(st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + float2(1.0, 0.0));
-    float c = random(i + float2(0.0, 1.0));
-    float d = random(i + float2(1.0, 1.0));
-
-    // Smooth Interpolation
-
-    // Cubic Hermine Curve.  Same as SmoothStep()
-    float2 u = f * f * (3.0 - 2.0 * f);
-    // u = smoothstep(0.,1.,f);
-
-    // Mix 4 coorners percentages
-    return smoothstep(a, b, u.x) +
-        (c - a) * u.y * (1.0 - u.x) +
-        (d - b) * u.x * u.y;
+    float n = snoise((uv * 10) + _Time.y);
+    //float rmn = remap(n, float2(0, 1), float2(0, 0.03));
+    float rmn = remap(n, float2(0, 1), float2(0, 0.01));
+    uv += rmn;
+    return tex2D(_ColorTexture, uv).xyz;
 }
 
 // Foreground effect
 float3 ForegroundEffect(float3 wpos, float2 uv, float luma)
 {
-//#if defined(OTAVJ_FX0)
-
-    //float seed = sin(1 + _Time.w * random(uv));
-    //float c;
-    //if (0.9 < seed)
-    //{
-    //    c = noise(uv * 64);
-    //}
-    //else
-    //{
-    //    c = random(uv);
-    //}
-    //float2 st = _ScreenSize.xy * (uv + 0.5);
-    //float2 pos = st * 100.0;
-    ////float c = noiseA(pos);
-    //return float3(c, c, c);
     
-    //pattern E
-    //float2 st = uv;
-    //st.x *= _ScreenSize.x / _ScreenSize.y;
-    //float3 color = float3(0.0, 0.0, 0.0);
-    //float2 pos = float2(st * 3.);
-
-    //float DF = 0.0;
-
-    ////// Add a random position
-    //float a = 0.0;
-    //float2 vel = float2(_Time.w * .1, _Time.w * .1);
-    //DF += snoise(pos + vel) * .25 + .25;
-
-    ////// Add a random position
-    //a = snoise(pos * float2(cos(_Time.w * 0.15), sin(_Time.w * 0.1)) * 0.1) * 3.1415;
-    //vel = float2(cos(a), sin(a));
-    //DF += snoise(pos + vel) * .25 + .25;
-
-    //float ssv = smoothstep(.7, .75, frac(DF));
-    //color = float3(ssv, ssv, ssv);
-
-    //return float3(1.0 - color);
+#if defined(OTAVJ_FX0)
     
-    //pattern D
-    //float2 st = uv;
-    //st.x *= _ScreenSize.x / _ScreenSize.y;
-
-    //float3 color = float3(0.0, 0.0, 0.0);
-
-    //float cols = 2.;
-    //float freq = random(floor(_Time.w)) + abs(atan(_Time.w) * 0.1);
-    //float t = 60. + _Time.w * (1.0 - freq) * 30.;
-
-    //if (frac(st.y * cols * 0.5) < 0.5)
-    //{
-    //    t *= -1.0;
-    //}
-
-    //freq += random(floor(st.y));
-
-    //float offset = 0.025;
-    //color = float3(randomSerie(st.x, freq * 100., t + offset),
-    //             randomSerie(st.x, freq * 100., t),
-    //             randomSerie(st.x, freq * 100., t - offset));
-    ////color = float3(randomSerie(st.y, freq * 100., t + offset),
-    ////             randomSerie(st.y, freq * 100., t),
-    ////             randomSerie(st.y, freq * 100., t - offset));
-    //return color;
+    float rdm = random(getTickedTime(delta));
+    rdm *= 10.0;
+    if (rdm < 1.0f)
+    {
+        return effectMonoPatternA(wpos, uv, luma);
+    }
+    else if (rdm < 4.0f)
+    {
+        return effectMonoPatternG(wpos, uv, luma);
+    }
+    else
+    {
+        return effectMonoPatternH(wpos, uv, luma);
+    }
     
-    
-    //pattern C
-  //  const float2 vp = float2(320.0, 200.0);
-  //  float t = _Time.w;
-  //  float2 p0 = (uv - 0.5) * vp;
-  //  float2 hvp = vp * 0.5;
-  //  float2 p1d = float2(cos(t / 98.0), sin(t / 178.0)) * hvp - p0;
-  //  float2 p2d = float2(sin(-t / 124.0), cos(-t / 104.0)) * hvp - p0;
-  //  float2 p3d = float2(cos(-t / 165.0), cos(t / 45.0)) * hvp - p0;
-  //  float sum = 0.5 + 0.5 * (
-		//cos(length(p1d) / 30.0) +
-		//cos(length(p2d) / 20.0) +
-		//sin(length(p3d) / 25.0) * sin(p3d.x / 20.0) * sin(p3d.y / 15.0));
-  //  return tex2D(_ColorTexture, frac(uv + float2(frac(sum), frac(sum)))).rgb;
-    
-    
-    //pattern B
-    //float2 st = uv * 70.0;
-    //float2 ipos = floor(st);
-    //float2 fpos = frac(st);
-    //float d = random(ipos + _Time.w);
-    //return float3(d, d, d);
+#endif
 
-    //pattern A
-    //float c = random_A(normalize(uv.x + uv.y + _Time.w));
-    //return float3(c, c, c);
+#if defined(OTAVJ_FX1)
 
-
-
-
-
-    //pattern F
-    //// Animated zebra
-
-    ////// Noise field positions
-    //float3 np1 = float3(wpos.y * 16, 0, _Time.y);
-    //float3 np2 = float3(wpos.y * 32, 0, _Time.y * 2) * 0.8;
-
-    //// Potential value
-    //float pt = (luma - 0.5) + snoise(np1) + snoise(np2);
-
-    //// Grayscale
-    //float gray = abs(pt) < _EffectParams.x + 0.02;
-
-    //// Emission
-    //float em = _EffectParams.y * 4;
-
-    //// Output
-    //return gray * (1 + em);
-
-    //pattern G
-    float delta = 1.0f / 15.0f;
-    //float glitchStep = lerp(4.0f, 32.0f, random(getTickedTime(delta)));
+    float rdm = random(getTickedTime(delta));
+    rdm *= 10.0;
+    if (rdm < 2.0f)
+    {
+        return effectMonoPatternAd(wpos, uv, luma);
+    }
+    else if (rdm < 4.0f)
+    {
+        return effectMonoPatternB(wpos, uv, luma);
+    }
+    else if (rdm < 6.0f)
+    {
+        return effectMonoPatternC(wpos, uv, luma);
+    }
+    else 
+    {
+        return effectMonoPatternD(wpos, uv, luma);
+    }
     
-    //float4 screenColor = tex2D(_ColorTexture, uv);
-    
-    //uv.x = round(uv.x * glitchStep) / glitchStep;
-    //float4 glitchColor = tex2D(_ColorTexture, uv);
-    
-    //return lerp(screenColor, glitchColor, float4(0.3f, 0.3f, 0.3f, 0.3f)).xyz;
-    
-    //pattern H
-    ////float intensity = clamp(2.0f * sin(getTickedTime(delta)), 0.0f, 10.0f);
-    ////intensity *= 1.5f;
-    //float intensity = 1.5f;
-    
-    //float texc1 = tex2D(_ColorTexture, frac(uv + random(float2(getTickedTime(delta), 0.25f)) * 10.0f) * 0.75f).r;
-    //float texc2 = tex2D(_ColorTexture, frac(uv + random(float2(getTickedTime(delta), 0.78f)) * 10.0f) * 0.5f).r;
-    
-    //// recalculate intensity
-    //float prechrOffset = step(0.5f * (texc1 + texc2), 0.5f);
-    //float chrOffset = (2.0f * prechrOffset + 1.0f) * 0.005f * intensity;
-    
-    //float4 screenColor = tex2D(_ColorTexture, uv);
-    //float chrColR = tex2D(_ColorTexture, float2(uv.x + chrOffset, uv.y)).r;
-    //float chrColB = tex2D(_ColorTexture, float2(uv.x - chrOffset, uv.y)).b;
-    //return float3(chrColR, screenColor.g, chrColB);
-    
-    // pattern I
-    //float n = snoise((uv * 10) + _Time.y);
-    //float rmn = remap(n, float2(0, 1), float2(0, 0.03));
-    //uv += rmn;
-    //return tex2D(_ColorTexture, uv).xyz;
-    
-    
-//#endif
-//
-//#if defined(RCAM_FX1)
-//
+#endif
+
+#if defined(OTAVJ_FX2)
+
     // Marble-like pattern
 
     // Frequency
@@ -525,53 +275,81 @@ float3 ForegroundEffect(float3 wpos, float2 uv, float luma)
 
     // Output
     return rgb * (1 + em * 8) + em;
-//
-//#endif
-//
-//#if defined(RCAM_FX2)
-//
-//    // Slicer seed calculation
-//
-//    // Slice frequency (1/height)
-//    float freq = 60;
-//
-//    // Per-slice random seed
-//    uint seed1 = floor(wpos.y * freq + 200) * 2;
-//
-//    // Random slice width
-//    float width = lerp(0.5, 2, Hash(seed1));
-//
-//    // Random slice speed
-//    float speed = lerp(1.0, 5, Hash(seed1 + 1));
-//
-//    // Effect direction
-//    float3 dir = float3(_EffectParams.z, 0, _EffectParams.w);
-//
-//    // Potential value (scrolling strips)
-//    float pt = (dot(wpos, dir) + 100 + _Time.y * speed) * width;
-//
-//    // Per-strip random seed
-//    uint seed2 = (uint)floor(pt) * 0x87893u;
-//
-//    // Color mapping with per-strip UV displacement
-//    float2 disp = float2(Hash(seed2), Hash(seed2 + 1)) - 0.5;
-//    float3 cm = tex2D(_ColorTexture, frac(uv + disp * 0.1)).rgb;
-//
-//    // Per-strip random color
-//    float3 cr = HsvToRgb(float3(Hash(seed2 + 2), 1, 1));
-//
-//    // Color selection (color map -> random color -> black)
-//    float sel = Hash(seed2 + 3);
-//    float3 rgb = sel < _EffectParams.x * 2 ? cr : cm;
-//    rgb = sel < _EffectParams.x * 2 - 1 ? 0 : rgb;
-//
-//    // Emission
-//    float3 em = Hash(seed2 + 4) < _EffectParams.y * 0.5;
-//
-//    // Output
-//    return rgb * (1 + em * 8) + em;
-//
-//#endif
+
+#endif
+
+#if defined(OTAVJ_FX3)
+
+    // Slicer seed calculation
+
+    // Slice frequency (1/height)
+    float freq = 60;
+
+    // Per-slice random seed
+    uint seed1 = floor(wpos.y * freq + 200) * 2;
+
+    // Random slice width
+    float width = lerp(0.5, 2, Hash(seed1));
+
+    // Random slice speed
+    float speed = lerp(1.0, 5, Hash(seed1 + 1));
+
+    // Effect direction
+    float3 dir = float3(_EffectParams.z, 0, _EffectParams.w);
+
+    // Potential value (scrolling strips)
+    float pt = (dot(wpos, dir) + 100 + _Time.y * speed) * width;
+
+    // Per-strip random seed
+    uint seed2 = (uint) floor(pt) * 0x87893u;
+
+    // Color mapping with per-strip UV displacement
+    float2 disp = float2(Hash(seed2), Hash(seed2 + 1)) - 0.5;
+    float3 cm = tex2D(_ColorTexture, frac(uv + disp * 0.1)).rgb;
+
+    // Per-strip random color
+    float3 cr = HsvToRgb(float3(Hash(seed2 + 2), 1, 1));
+
+    // Color selection (color map -> random color -> black)
+    float sel = Hash(seed2 + 3);
+    float3 rgb = sel < _EffectParams.x * 2 ? cr : cm;
+    rgb = sel < _EffectParams.x * 2 - 1 ? 0 : rgb;
+
+    // Emission
+    float3 em = Hash(seed2 + 4) < _EffectParams.y * 0.5;
+
+    // Output
+    return rgb * (1 + em * 8) + em;
+
+#endif
+}
+
+float3 BackgroundEffect1(float3 wpos, float2 uv, float luma)
+{
+    float rdm = random(getTickedTime(delta));
+    rdm *= 10.0;
+    if (rdm < 1.0f)
+    {
+        return effectMonoPatternH(wpos, uv, luma);
+    }
+    else
+    {
+        return effectMonoPatternG(wpos, uv, luma);
+    }
+}
+
+float3 BackgroundEffect2(float3 wpos, float2 uv, float luma)
+{
+    float rdm = random(getTickedTime(delta));
+    rdm *= 10.0;
+    if (rdm < 1.0f)
+    {
+        return effectMonoPatternH(wpos, uv, luma);
+    }
+    else
+    {
+        return effectMonoPatternI(wpos, uv, luma);
+    }
 }
 
 void FullScreenPass(Varyings varyings,
@@ -599,11 +377,31 @@ void FullScreenPass(Varyings varyings,
     c.rgb = lerp(c.rgb, eff, c.a * _Opacity.y);
     
 #endif
-
+    
     // BG opacity
+#if defined(OTAVJ_NOFX)
     float3 bg = FastSRGBToLinear(FastLinearToSRGB(c.rgb) * _Opacity.x);
-    c.rgb = lerp(bg, c.rgb, c.a);
+#endif
+    
+#if !defined(OTAVJ_NOFX)
+    float3 bgeff;
+    if (_BgPattern == 1)
+    {
+        bgeff = BackgroundEffect1(p, uv, lum);
+    }
+    else if (_BgPattern == 2)
+    {
+        bgeff = BackgroundEffect2(p, uv, lum);
+    }
+    else
+    {
+        bgeff = c.rgb;
+    }
+    float3 bg = FastSRGBToLinear(FastLinearToSRGB(bgeff) * _Opacity.x);
+#endif
 
+    c.rgb = lerp(bg, c.rgb, c.a);
+    
     // Depth mask
     bool mask = c.a > 0.5 || _Opacity.x > 0;
 
