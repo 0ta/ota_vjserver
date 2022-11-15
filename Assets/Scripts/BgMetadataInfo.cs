@@ -31,9 +31,9 @@ namespace ota.ndi
             }
         }
 
-        public List<Mesh> getSentMeshList()
+        public List<(Vector3[], int[])> getSentMeshList()
         {
-            var ret = new List<Mesh>();
+            var ret = new List<(Vector3[], int[])>();
             var meshvertit = verticesList.GetEnumerator();
             var meshtriit = trianglesList.GetEnumerator();
             while (meshvertit.MoveNext())
@@ -44,22 +44,57 @@ namespace ota.ndi
                 for (int i = 0; i < vertarray.Length; i++)
                 {
                     var j = i * 3;
-                    vertarray[i] = new Vector3(vec3floatarray[j], vec3floatarray[j + 1], vec3floatarray[j + 2]); 
+                    vertarray[i] = new Vector3(vec3floatarray[j], vec3floatarray[j + 1], vec3floatarray[j + 2]);
                 }
 
                 // Triangles(Int array)
                 meshtriit.MoveNext();
                 var triarray = meshtriit.Current;
 
+                // Create Tupple for Mesh
+                ret.Add((vertarray, triarray));
+
                 // Create Mesh
-                Mesh mesh = new Mesh();
-                mesh.vertices = vertarray;
-                mesh.SetIndices(triarray, MeshTopology.Lines, 0);
+                //Mesh mesh = new Mesh();
+                //mesh.vertices = vertarray;
+                ////mesh.SetIndices(triarray, MeshTopology.Lines, 0);
                 //mesh.triangles = triarray;
-                ret.Add(mesh);
+                ////mesh.RecalculateNormals();
+                //ret.Add(mesh);
             }
             return ret;
         }
+
+        //public List<Mesh> getSentMeshList()
+        //{
+        //    var ret = new List<Mesh>();
+        //    var meshvertit = verticesList.GetEnumerator();
+        //    var meshtriit = trianglesList.GetEnumerator();
+        //    while (meshvertit.MoveNext())
+        //    {
+        //        // Vertices(Vector3 array)
+        //        var vec3floatarray = meshvertit.Current;
+        //        Vector3[] vertarray = new Vector3[vec3floatarray.Length / 3];
+        //        for (int i = 0; i < vertarray.Length; i++)
+        //        {
+        //            var j = i * 3;
+        //            vertarray[i] = new Vector3(vec3floatarray[j], vec3floatarray[j + 1], vec3floatarray[j + 2]); 
+        //        }
+
+        //        // Triangles(Int array)
+        //        meshtriit.MoveNext();
+        //        var triarray = meshtriit.Current;
+
+        //        // Create Mesh
+        //        Mesh mesh = new Mesh();
+        //        mesh.vertices = vertarray;
+        //        //mesh.SetIndices(triarray, MeshTopology.Lines, 0);
+        //        mesh.triangles = triarray;
+        //        //mesh.RecalculateNormals();
+        //        ret.Add(mesh);
+        //    }
+        //    return ret;
+        //}
 
         private float[] getVerticeListFloatArray(Vector3[] vec3array)
         {

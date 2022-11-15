@@ -40,7 +40,6 @@ namespace ota.ndi
             _material.SetTexture("_ColorTexture", extractor.ColorTexture);
             _material.SetTexture("_DepthTexture", extractor.DepthTexture);
 
-
             //
             //for test
             //
