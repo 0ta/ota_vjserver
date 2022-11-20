@@ -1969,7 +1969,7 @@ MonoBehaviour:
   - {fileID: 82}
   m_ExposedName: Seed
   m_Exposed: 1
-  m_Order: 3
+  m_Order: 0
   m_Category: 
   m_Min:
     m_Type:
@@ -2049,7 +2049,7 @@ MonoBehaviour:
   - {fileID: 84}
   m_ExposedName: Frequency
   m_Exposed: 1
-  m_Order: 4
+  m_Order: 1
   m_Category: 
   m_Min:
     m_Type:
@@ -2129,7 +2129,7 @@ MonoBehaviour:
   - {fileID: 86}
   m_ExposedName: Base Color
   m_Exposed: 1
-  m_Order: 5
+  m_Order: 2
   m_Category: 
   m_Min:
     m_Type:
@@ -2345,7 +2345,7 @@ MonoBehaviour:
   - {fileID: 92}
   m_ExposedName: Flash Color
   m_Exposed: 1
-  m_Order: 6
+  m_Order: 3
   m_Category: 
   m_Min:
     m_Type:
@@ -2561,7 +2561,7 @@ MonoBehaviour:
   m_OutputSlots: []
   m_ExposedName: Color
   m_Exposed: 0
-  m_Order: 7
+  m_Order: 4
   m_Category: 
   m_Min:
     m_Type:
@@ -2743,7 +2743,7 @@ MonoBehaviour:
   - {fileID: 107}
   m_ExposedName: Flash Duration
   m_Exposed: 1
-  m_Order: 8
+  m_Order: 5
   m_Category: 
   m_Min:
     m_Type:
