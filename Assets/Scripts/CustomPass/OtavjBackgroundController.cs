@@ -11,6 +11,7 @@ namespace ota.ndi
         public int BgEffectNumber;
         public float EffectParameter;
         public float EffectIntensity;
+        public float EffectDirection;
 
         //public bool BackFill { get; set; } = true;
         //public int EffectNumber { get; set; }
@@ -33,9 +34,9 @@ namespace ota.ndi
             if (_props == null) _props = new MaterialPropertyBlock();
 
             var oparams = new Vector2(_backOpacity, _effectOpacity);
-            //var phi = EffectDirection * Mathf.PI * 2;
+            var phi = EffectDirection * Mathf.PI * 2;
             var eparams = new Vector4
-              (EffectParameter, EffectIntensity, 0, 0);
+              (EffectParameter, EffectIntensity, Mathf.Sin(phi), Mathf.Cos(phi));
 
             _props.SetVector("_Opacity", oparams);
             _props.SetVector("_EffectParams", eparams);
