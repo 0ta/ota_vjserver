@@ -15,7 +15,7 @@ namespace ota.ndi {
                 var z = Random.Range(-25f, 25f);
                 var fnum = Random.Range(0, flowers.Length - 1);
 
-                var flowerobj = Instantiate(flowers[fnum], parent);
+                var flowerobj = Instantiate(flowers[fnum], parent.Find("FlowerMesh").transform);
 
                 Vector3 pos = flowerobj.transform.position;
                 pos.x += x;

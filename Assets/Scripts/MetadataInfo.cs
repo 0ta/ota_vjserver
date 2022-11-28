@@ -14,18 +14,24 @@ namespace ota.ndi
         public string projectionMatrix { get; set; }
         public float minDepth { get; set; }
         public float maxDepth { get; set; }
+        public bool[] toggles { get; set; }
+        public float[] sliders { get; set; }
+
 
         public MetadataInfo()
         {
         }
 
-        public MetadataInfo(Vector3 arcameraPosition, Quaternion arcameraRotation, Matrix4x4 projectionMatrix, float minDepth, float maxDepth)
+        public MetadataInfo(Vector3 arcameraPosition, Quaternion arcameraRotation, Matrix4x4 projectionMatrix, float minDepth, float maxDepth, bool[] toggles, float[] sliders)
         {
             this.arcameraPosition = arcameraPosition.ToString("F2");
             this.arcameraRotation = arcameraRotation.ToString("F5");
             this.projectionMatrix = ToStringFromMat(projectionMatrix);
             this.minDepth = minDepth;
             this.maxDepth = maxDepth;
+
+            this.toggles = toggles;
+            this.sliders = sliders;
         }
 
         public MetadataInfo(string arcameraPosition, string arcameraRotation, string projectionMatrix, float minDepth, float maxDepth)
@@ -40,6 +46,16 @@ namespace ota.ndi
             this.projectionMatrix = projectionMatrix;
             this.minDepth = minDepth;
             this.maxDepth = maxDepth;
+        }
+
+        public bool GetToggle(int i)
+        {
+            return toggles[i];
+        }
+
+        public float GetSlider(int i)
+        {
+            return sliders[i];
         }
 
         public Vector3 getArcameraPosition()

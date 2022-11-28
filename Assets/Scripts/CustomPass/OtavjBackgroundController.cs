@@ -1,24 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace ota.ndi
 {
     public class OtavjBackgroundController : MonoBehaviour
     {
-        public bool BackFill;
-        public int EffectNumber;
-        public int BgEffectNumber;
-        public float EffectParameter;
-        public float EffectIntensity;
-        public float EffectDirection;
-
-        //public bool BackFill { get; set; } = true;
-        //public int EffectNumber { get; set; }
-        //public int BgEffectNumber { get; set; }
-
-        //public float EffectParameter { get; set; }
-        //public float EffectIntensity { get; set; }
+        public bool BackFill { get; set; }
+        public int EffectNumber { get; set; }
+        public int BgEffectNumber { get; set; }
+        public float EffectParameter { get; set; } = 0.8f;
+        public float EffectIntensity { get; set; }
+        public float EffectDirection { get; set; }
 
         float _backOpacity;
         float _effectOpacity;
@@ -61,5 +55,6 @@ namespace ota.ndi
             if (_currentEffect != EffectNumber && _effectOpacity == 0)
                 _currentEffect = EffectNumber;
         }
+
     }
 }

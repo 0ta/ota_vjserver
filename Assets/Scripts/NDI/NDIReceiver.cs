@@ -262,7 +262,6 @@ namespace ota.ndi
                                 metadatastr = Marshal.PtrToStringAnsi(videoFrame.p_metadata);
                             else
                                 metadatastr = "metadata is null";
-                            //Debug.Log(metadatastr);
                             NDIlib.recv_free_video_v2(_recvInstancePtr, ref videoFrame);
                         }, null);
 
