@@ -1,4 +1,4 @@
-Shader "Unlit/FloorWave"
+Shader "otavj/FloorWave"
 {
     Properties
     {

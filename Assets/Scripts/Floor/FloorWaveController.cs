@@ -11,7 +11,7 @@ namespace ota.ndi
         void Start()
         {
             if (m_floorwaveMeshFilter == null) return;
-            m_floorwaveMeshFilter.mesh.SetIndices(m_floorwaveMeshFilter.mesh.triangles, MeshTopology.Lines, 0);
+            //m_floorwaveMeshFilter.mesh.SetIndices(m_floorwaveMeshFilter.mesh.triangles, MeshTopology.Lines, 0);
         }
 
         // Update is called once per frame
