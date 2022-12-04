@@ -64,13 +64,8 @@ Shader "otavj/BackGroundMeshGeometry"
                     Varyings o;
                     o.position = UnityWorldToClipPos(float4(wpos, 1));
                     o.normal = wnrm;
-
-
-
-                    //float4 tmpvertex = UnityWorldToClipPos(float4(owpos, 1));
                     float4 tmpvertex = UnityWorldToClipPos(float4(owpos, 1));
                     o.addeduv = float2(tmpvertex.x / tmpvertex.w, tmpvertex.y / tmpvertex.w);
-
                     return o;
                 }
 
@@ -89,6 +84,7 @@ Shader "otavj/BackGroundMeshGeometry"
                     return time - garbage;
                 }
 
+                float _Intensity;
                 //
                 // Geometry shader
                 //
@@ -113,9 +109,11 @@ Shader "otavj/BackGroundMeshGeometry"
                     
                     float zext = saturate(0.4 - cos(_Time.y * UNITY_PI * 2) * 0.41);
                     zext *= 1 + 0.3 * sin(pid * 832.37843 + _Time.y * 88.76);
+
                     float tz = cos(_Time.y * UNITY_PI * 2);
                     float r = random(pid);
-                    float max = lerp(0, 0.08, r);
+                    //float max = lerp(0, 0.08, r);
+                    float max = lerp(0, 0.08, _Intensity * 10);
                     float z = lerp(0, max, abs(tz));
                     float3 offs = ConstructNormal(wp0, wp1, wp2) * z;
 

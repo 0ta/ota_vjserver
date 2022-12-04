@@ -2,16 +2,17 @@ Shader "otavj/BackGroundMeshWireframe"
 {
     Properties
     {
-        //_LineColor("LineColor", Color) = (0.4529,0.4529,0.492,0.8)
-        _LineColor("LineColor", Color) = (0,0,0,0.8)
-        _FillColor("FillColor", Color) = (0,0,0,0)
+        _LineColor("LineColor", Color) = (0.4529,0.4529,0.492,0.8)
+        //_LineColor("LineColor", Color) = (0,0,0,0.8)
+        //_FillColor("FillColor", Color) = (0,0,0,0)
         _WireThickness("Wire Thickness", RANGE(0, 800)) = 100
         [MaterialToggle] UseDiscard("Discard Fill", Float) = 1
     }
 
     SubShader
     {
-        Tags { "RenderType" = "Opaque" }
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
+        Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
         {
@@ -57,16 +58,19 @@ Shader "otavj/BackGroundMeshWireframe"
                 return time - garbage;
             }
 
+            float _Intensity;
+
             v2g vert(appdata v)
             {
                 v2g o;
 
                 float rdm = random(getTickedTime(delta));
-                //float fnoise = snoise(float2(getTickedTime(delta), 0));
-                float z = lerp(0, 0.05, step(0.5, rdm));
+                float max = lerp(0, 0.07, _Intensity * 30);
+                float z = lerp(0, max, step(0.5, rdm));
+
 
                 o.projectionSpaceVertex = UnityObjectToClipPos(v.vertex + float3(0, 0, z));
-                o.worldSpacePosition = mul(unity_ObjectToWorld, v.vertex + float3(0, 0, 0));
+                o.worldSpacePosition = mul(unity_ObjectToWorld, v.vertex + float3(0, 0, z));
 
                 float4 tmpvertex = UnityObjectToClipPos(v.vertex);
                 o.addeduv = float2(tmpvertex.x / tmpvertex.w, tmpvertex.y / tmpvertex.w);
@@ -121,7 +125,7 @@ Shader "otavj/BackGroundMeshWireframe"
             }
 
             uniform fixed4 _LineColor;
-            uniform fixed4 _FillColor;
+            //uniform fixed4 _FillColor;
 
             sampler2D _ColorTexture;
 

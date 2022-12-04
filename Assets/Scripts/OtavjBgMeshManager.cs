@@ -7,9 +7,13 @@ namespace ota.ndi {
     public class OtavjBgMeshManager : MonoBehaviour
     {
         public MeshFilter m_BackgroundMeshPrefab;
+        public MusicController m_MusicController;
+        public Shader _bgwireframeShader;
+        public Shader _bgpushnormalShader;
+
         //public MeshFilter m_BackgroundLineMeshPrefab;
         readonly Dictionary<string, MeshFilter> m_MeshMap = new Dictionary<string, MeshFilter>();
-        const string linemesh_Suffix = "_line";
+        //const string linemesh_Suffix = "_line";
 
         // Update is called once per frame
         void Update()
@@ -57,6 +61,9 @@ namespace ota.ndi {
                         //    sb.Append(vec3.z.ToString("F9"));
                         //}
                         //Debug.Log(sb.ToString());
+                    } else
+                    {
+                        PreRenderingMesh(m_MeshMap[meshkey]);
                     }
                 } else
                 {
@@ -112,11 +119,16 @@ namespace ota.ndi {
             if (extractor == null || extractor.Metadata == null) return;
 
             Material _material = meshfilter.GetComponentInParent<Renderer>().material;
-            //_material.SetVector("_ProjectionVector", prj.Value);
-            //_material.SetMatrix("_InverseViewMatrix", v2w.Value);
-            _material.SetFloat("_Intensity", 1.0f);
+
+            if (extractor.Metadata.GetToggle(23)) {
+                _material.shader = _bgwireframeShader;
+            } else
+            {
+                _material.shader = _bgpushnormalShader;
+            }
+
+            _material.SetFloat("_Intensity", m_MusicController.volume);
             _material.SetTexture("_ColorTexture", extractor.ColorTexture);
-            //_material.SetTexture("_DepthTexture", extractor.DepthTexture);
         }
 
         //void PreRenderingLineMesh(MeshFilter meshfilter)

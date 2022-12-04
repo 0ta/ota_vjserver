@@ -13,7 +13,7 @@ namespace ota.ndi
     public class NDIFinder : MonoBehaviour
     {
         [SerializeField] private NDIReceiver _ndiReceiver = null;
-
+        public string ConnectedNdiName = null;
         private IntPtr _findInstancePtr = IntPtr.Zero;
 
         private Thread _receiveThread = null;
@@ -117,6 +117,7 @@ namespace ota.ndi
                         Source source = new Source(src);
                         _sourceList.Add(source);
                         Debug.Log(source.Name);
+                        ConnectedNdiName = source.Name;
                         _ndiReceiver.Connect(source);
                     }
                 }
