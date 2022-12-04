@@ -1,4 +1,4 @@
-Shader "otavj/FloorWave"
+Shader "otavj/FloorWave4LineMesh"
 {
     Properties
     {

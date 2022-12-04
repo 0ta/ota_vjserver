@@ -7,7 +7,7 @@ namespace ota.ndi {
     public class OtavjBgMeshManager : MonoBehaviour
     {
         public MeshFilter m_BackgroundMeshPrefab;
-        public MeshFilter m_BackgroundLineMeshPrefab;
+        //public MeshFilter m_BackgroundLineMeshPrefab;
         readonly Dictionary<string, MeshFilter> m_MeshMap = new Dictionary<string, MeshFilter>();
         const string linemesh_Suffix = "_line";
 
@@ -31,14 +31,16 @@ namespace ota.ndi {
                         //m_MeshMap[meshkey].mesh = CreateMesh(meshList[i].Item1, meshList[i].Item2);
                         m_MeshMap[meshkey].mesh.vertices = meshList[i].Item1;
                         m_MeshMap[meshkey].mesh.triangles = meshList[i].Item2;
+                        m_MeshMap[meshkey].mesh.RecalculateNormals();
 
                         // manage line mesh as well
-                        PreRenderingMesh(m_MeshMap[meshkey + linemesh_Suffix]);
-                        m_MeshMap[meshkey + linemesh_Suffix].mesh.Clear();
-                        //Object.Destroy(m_MeshMap[meshkey + linemesh_Suffix].mesh);
-                        //m_MeshMap[meshkey + linemesh_Suffix].mesh = CreateLineMesh(meshList[i].Item1, meshList[i].Item2);
-                        m_MeshMap[meshkey + linemesh_Suffix].mesh.vertices = meshList[i].Item1;
-                        m_MeshMap[meshkey + linemesh_Suffix].mesh.SetIndices(meshList[i].Item2, MeshTopology.Lines, 0);
+                        //PreRenderingMesh(m_MeshMap[meshkey + linemesh_Suffix]);
+                        //m_MeshMap[meshkey + linemesh_Suffix].mesh.Clear();
+                        ////Object.Destroy(m_MeshMap[meshkey + linemesh_Suffix].mesh);
+                        ////m_MeshMap[meshkey + linemesh_Suffix].mesh = CreateLineMesh(meshList[i].Item1, meshList[i].Item2);
+                        //m_MeshMap[meshkey + linemesh_Suffix].mesh.vertices = meshList[i].Item1;
+                        ////m_MeshMap[meshkey + linemesh_Suffix].mesh.SetIndices(meshList[i].Item2, MeshTopology.Lines, 0);
+                        //m_MeshMap[meshkey + linemesh_Suffix].mesh.triangles = meshList[i].Item2;
 
                         //Debug.Log("here");
                         ////test
@@ -66,10 +68,10 @@ namespace ota.ndi {
                     m_MeshMap.Add(meshkey, bgmeshfilter);
 
                     // manage line mesh as well
-                    var bglinemeshfilter = Instantiate(m_BackgroundLineMeshPrefab, parent.Find("BgLineMesh").transform);
-                    PreRenderingLineMesh(bglinemeshfilter);
-                    bglinemeshfilter.mesh = CreateLineMesh(meshList[i].Item1, meshList[i].Item2);
-                    m_MeshMap.Add(meshkey + linemesh_Suffix, bglinemeshfilter);
+                    //var bglinemeshfilter = Instantiate(m_BackgroundLineMeshPrefab, parent.Find("BgLineMesh").transform);
+                    //PreRenderingLineMesh(bglinemeshfilter);
+                    //bglinemeshfilter.mesh = CreateLineMesh(meshList[i].Item1, meshList[i].Item2);
+                    //m_MeshMap.Add(meshkey + linemesh_Suffix, bglinemeshfilter);
                 }
             }
 
@@ -88,16 +90,18 @@ namespace ota.ndi {
             var mesh = new Mesh();
             mesh.vertices = vertices;
             mesh.triangles = index;
+            mesh.RecalculateNormals();
             return mesh;
         }
 
-        Mesh CreateLineMesh(Vector3[] vertices, int[] index)
-        {
-            var linemesh = new Mesh();
-            linemesh.vertices = vertices;
-            linemesh.SetIndices(index, MeshTopology.Lines, 0);
-            return linemesh;
-        }
+        //Mesh CreateLineMesh(Vector3[] vertices, int[] index)
+        //{
+        //    var linemesh = new Mesh();
+        //    linemesh.vertices = vertices;
+        //    linemesh.triangles = index;
+        //    //linemesh.SetIndices(index, MeshTopology.Lines, 0);
+        //    return linemesh;
+        //}
 
         void PreRenderingMesh(MeshFilter meshfilter)
         {
@@ -115,21 +119,21 @@ namespace ota.ndi {
             //_material.SetTexture("_DepthTexture", extractor.DepthTexture);
         }
 
-        void PreRenderingLineMesh(MeshFilter meshfilter)
-        {
-            //var extractor = OtavjVFXResource.Extractor;
-            //var prj = ProjectionUtils.VectorFromReceiver;
-            //var v2w = ProjectionUtils.CameraToWorldMatrix;
+        //void PreRenderingLineMesh(MeshFilter meshfilter)
+        //{
+        //    //var extractor = OtavjVFXResource.Extractor;
+        //    //var prj = ProjectionUtils.VectorFromReceiver;
+        //    //var v2w = ProjectionUtils.CameraToWorldMatrix;
 
-            //if (extractor == null || extractor.Metadata == null) return;
+        //    //if (extractor == null || extractor.Metadata == null) return;
 
-            Material _material = meshfilter.GetComponentInParent<Renderer>().material;
-            //_material.SetVector("_ProjectionVector", prj.Value);
-            //_material.SetMatrix("_InverseViewMatrix", v2w.Value);
-            _material.SetFloat("_Intensity", 1.0f);
-            //_material.SetTexture("_ColorTexture", extractor.ColorTexture);
-            //_material.SetTexture("_DepthTexture", extractor.DepthTexture);
-        }
+        //    Material _material = meshfilter.GetComponentInParent<Renderer>().material;
+        //    //_material.SetVector("_ProjectionVector", prj.Value);
+        //    //_material.SetMatrix("_InverseViewMatrix", v2w.Value);
+        //    _material.SetFloat("_Intensity", 1.0f);
+        //    //_material.SetTexture("_ColorTexture", extractor.ColorTexture);
+        //    //_material.SetTexture("_DepthTexture", extractor.DepthTexture);
+        //}
 
         void RemoveMesh(string meshId)
         {
@@ -141,10 +145,10 @@ namespace ota.ndi {
                 m_MeshMap.Remove(meshId);
 
                 // manage line mesh as well
-                var bglinemeshfilter = m_MeshMap[meshId + linemesh_Suffix];
-                bglinemeshfilter.mesh.Clear();
-                Object.Destroy(bglinemeshfilter);
-                m_MeshMap.Remove(meshId + linemesh_Suffix);
+                //var bglinemeshfilter = m_MeshMap[meshId + linemesh_Suffix];
+                //bglinemeshfilter.mesh.Clear();
+                //Object.Destroy(bglinemeshfilter);
+                //m_MeshMap.Remove(meshId + linemesh_Suffix);
             }
 
         }
