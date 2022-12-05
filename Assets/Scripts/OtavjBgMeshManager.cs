@@ -27,44 +27,44 @@ namespace ota.ndi {
                 var meshkey = meshkeyList[i];
                 if (m_MeshMap.ContainsKey(meshkey))
                 {
-                    if (m_MeshMap[meshkey].mesh.vertices.Length != meshList.Count)
-                    {
-                        PreRenderingMesh(m_MeshMap[meshkey]);
-                        m_MeshMap[meshkey].mesh.Clear();
-                        //Object.Destroy(m_MeshMap[meshkey].mesh);
-                        //m_MeshMap[meshkey].mesh = CreateMesh(meshList[i].Item1, meshList[i].Item2);
-                        m_MeshMap[meshkey].mesh.vertices = meshList[i].Item1;
-                        m_MeshMap[meshkey].mesh.triangles = meshList[i].Item2;
-                        m_MeshMap[meshkey].mesh.RecalculateNormals();
+                    //if (m_MeshMap[meshkey].mesh.vertices.Length != meshList.Count)
+                    //{
+                    m_MeshMap[meshkey].mesh.Clear();
+                    PreRenderingMesh(m_MeshMap[meshkey]);
+                    //Object.Destroy(m_MeshMap[meshkey].mesh);
+                    //m_MeshMap[meshkey].mesh = CreateMesh(meshList[i].Item1, meshList[i].Item2);
+                    m_MeshMap[meshkey].mesh.vertices = meshList[i].Item1;
+                    m_MeshMap[meshkey].mesh.triangles = meshList[i].Item2;
+                    m_MeshMap[meshkey].mesh.RecalculateNormals();
 
-                        // manage line mesh as well
-                        //PreRenderingMesh(m_MeshMap[meshkey + linemesh_Suffix]);
-                        //m_MeshMap[meshkey + linemesh_Suffix].mesh.Clear();
-                        ////Object.Destroy(m_MeshMap[meshkey + linemesh_Suffix].mesh);
-                        ////m_MeshMap[meshkey + linemesh_Suffix].mesh = CreateLineMesh(meshList[i].Item1, meshList[i].Item2);
-                        //m_MeshMap[meshkey + linemesh_Suffix].mesh.vertices = meshList[i].Item1;
-                        ////m_MeshMap[meshkey + linemesh_Suffix].mesh.SetIndices(meshList[i].Item2, MeshTopology.Lines, 0);
-                        //m_MeshMap[meshkey + linemesh_Suffix].mesh.triangles = meshList[i].Item2;
+                    // manage line mesh as well
+                    //PreRenderingMesh(m_MeshMap[meshkey + linemesh_Suffix]);
+                    //m_MeshMap[meshkey + linemesh_Suffix].mesh.Clear();
+                    ////Object.Destroy(m_MeshMap[meshkey + linemesh_Suffix].mesh);
+                    ////m_MeshMap[meshkey + linemesh_Suffix].mesh = CreateLineMesh(meshList[i].Item1, meshList[i].Item2);
+                    //m_MeshMap[meshkey + linemesh_Suffix].mesh.vertices = meshList[i].Item1;
+                    ////m_MeshMap[meshkey + linemesh_Suffix].mesh.SetIndices(meshList[i].Item2, MeshTopology.Lines, 0);
+                    //m_MeshMap[meshkey + linemesh_Suffix].mesh.triangles = meshList[i].Item2;
 
-                        //Debug.Log("here");
-                        ////test
-                        //var it = meshList[i].normals.GetEnumerator();
-                        //StringBuilder sb = new StringBuilder();
-                        //while (it.MoveNext())
-                        //{
-                        //    Vector3 vec3 = (Vector3)it.Current;
-                        //    sb.Append(",");
-                        //    sb.Append(vec3.x.ToString("F9"));
-                        //    sb.Append(",");
-                        //    sb.Append(vec3.y.ToString("F9"));
-                        //    sb.Append(",");
-                        //    sb.Append(vec3.z.ToString("F9"));
-                        //}
-                        //Debug.Log(sb.ToString());
-                    } else
-                    {
-                        PreRenderingMesh(m_MeshMap[meshkey]);
-                    }
+                    //Debug.Log("here");
+                    ////test
+                    //var it = meshList[i].normals.GetEnumerator();
+                    //StringBuilder sb = new StringBuilder();
+                    //while (it.MoveNext())
+                    //{
+                    //    Vector3 vec3 = (Vector3)it.Current;
+                    //    sb.Append(",");
+                    //    sb.Append(vec3.x.ToString("F9"));
+                    //    sb.Append(",");
+                    //    sb.Append(vec3.y.ToString("F9"));
+                    //    sb.Append(",");
+                    //    sb.Append(vec3.z.ToString("F9"));
+                    //}
+                    //Debug.Log(sb.ToString());
+                    //} else
+                    //{
+                    //    PreRenderingMesh(m_MeshMap[meshkey]);
+                    //}
                 } else
                 {
                     var parent = this.transform.parent;
@@ -127,6 +127,16 @@ namespace ota.ndi {
                 _material.shader = _bgpushnormalShader;
             }
 
+            float fulfillFlg;
+            if (extractor.Metadata.GetToggle(27))
+            {
+                fulfillFlg = 0;
+            }
+            else
+            {
+                fulfillFlg = 1;
+            }
+            _material.SetFloat("UseDiscard", fulfillFlg);
             _material.SetFloat("_Intensity", m_MusicController.volume);
             _material.SetTexture("_ColorTexture", extractor.ColorTexture);
         }

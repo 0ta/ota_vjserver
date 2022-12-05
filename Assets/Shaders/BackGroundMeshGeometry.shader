@@ -110,7 +110,7 @@ Shader "otavj/BackGroundMeshGeometry"
                     float zext = saturate(0.4 - cos(_Time.y * UNITY_PI * 2) * 0.41);
                     zext *= 1 + 0.3 * sin(pid * 832.37843 + _Time.y * 88.76);
 
-                    float tz = cos(_Time.y * UNITY_PI * 2);
+                    float tz = cos(_Time.w * UNITY_PI * 2);
                     float r = random(pid);
                     //float max = lerp(0, 0.08, r);
                     float max = lerp(0, 0.08, _Intensity * 10);

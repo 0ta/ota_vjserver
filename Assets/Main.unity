@@ -1672,7 +1672,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _property:
     m_Name: Z
-  ControlNumber: 5
+  ControlNumber: 4
 --- !u!114 &409101856
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -1687,7 +1687,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _property:
     m_Name: RotationCenterZ
-  ControlNumber: 4
+  ControlNumber: 5
 --- !u!114 &409101857
 MonoBehaviour:
   m_ObjectHideFlags: 2
