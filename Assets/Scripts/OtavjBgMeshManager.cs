@@ -130,13 +130,13 @@ namespace ota.ndi {
             float fulfillFlg;
             if (extractor.Metadata.GetToggle(27))
             {
-                fulfillFlg = 0;
+                fulfillFlg = 0f;
             }
             else
             {
-                fulfillFlg = 1;
+                fulfillFlg = 1.0f;
             }
-            _material.SetFloat("UseDiscard", fulfillFlg);
+            _material.SetFloat("_UseDiscard", fulfillFlg);
             _material.SetFloat("_Intensity", m_MusicController.volume);
             _material.SetTexture("_ColorTexture", extractor.ColorTexture);
         }

@@ -6,7 +6,8 @@ Shader "otavj/BackGroundMeshWireframe"
         //_LineColor("LineColor", Color) = (0,0,0,0.8)
         //_FillColor("FillColor", Color) = (0,0,0,0)
         _WireThickness("Wire Thickness", RANGE(0, 800)) = 100
-        [MaterialToggle] UseDiscard("Discard Fill", Float) = 1
+        //[MaterialToggle] UseDiscard("Discard Fill", Float) = 1
+        _UseDiscard("Discard Fill", Float) = 0
     }
 
     SubShader
@@ -125,7 +126,7 @@ Shader "otavj/BackGroundMeshWireframe"
             }
 
             uniform fixed4 _LineColor;
-            //uniform fixed4 _FillColor;
+            float _UseDiscard;
 
             sampler2D _ColorTexture;
 
@@ -136,13 +137,20 @@ Shader "otavj/BackGroundMeshWireframe"
                 // Early out if we know we are not on a line segment.
                 if (minDistanceToEdge > 0.5)
                 {
-                    #ifdef USEDISCARD_ON
-                    discard;
-                    #else
-                    float4 color = tex2D(_ColorTexture, float2(i.addeduv.x * 0.5 + 0.5, (1 - (i.addeduv.y * 0.5 + 0.5))));
-                    return float4(color.x - 0.3, color.y - 0.2, color.z - 0.2, 0.3);
-                    //return _FillColor;
-                    #endif
+                    //#ifdef USEDISCARD_ON
+                    //discard;
+                    //#else
+                    //float4 color = tex2D(_ColorTexture, float2(i.addeduv.x * 0.5 + 0.5, (1 - (i.addeduv.y * 0.5 + 0.5))));
+                    //return float4(color.x - 0.3, color.y - 0.2, color.z - 0.2, 0.3);
+                    ////return _FillColor;
+                    //#endif
+                    if (_UseDiscard == 1) {
+                        discard;
+                    }
+                    else {
+                        float4 color = tex2D(_ColorTexture, float2(i.addeduv.x * 0.5 + 0.5, (1 - (i.addeduv.y * 0.5 + 0.5))));
+                        return float4(color.x - 0.3, color.y - 0.2, color.z - 0.2, 0.3);
+                    }
                 }
 
                 return _LineColor;
